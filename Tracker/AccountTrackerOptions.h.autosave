@@ -1,0 +1,12 @@
+#ifndef _TRACKER_ACCOUNTTRACKOPTIONS_H_
+#define _TRACKER_ACCOUNTTRACKOPTIONS_H_
+
+#include <QObject>
+
+class AccountTrackerOptions
+{
+public:
+    AccountTrackerOptions();
+};
+
+#endif // _TRACKER_ACCOUNTTRACKOPTIONS_H_
