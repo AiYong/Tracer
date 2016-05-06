@@ -3,7 +3,7 @@
 
 #include "Account.h"
 #include "AccountManager.h"
-
+#include "Instrument.h"
 #include "AccountTrackerSetting.h"
 
 #include "DatabaseManager.h"
@@ -106,6 +106,7 @@ public:
         QSqlQuery oQuery(dbConn);
         dbConn.transaction();
         oQuery.prepare(strQuery);
+        oQuery.addBindValue(0,pDep->GetID());
         oQuery.exec();
         dbConn.commit();
     }
@@ -134,7 +135,43 @@ public:
 
     void Save(AccountTrackerSetting const* pObj)
     {
-
+        QString strQuery = "INSERT INTO ACCOUNT_TRACKER_SETTING VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
+        QSqlQuery oQuery(dbConn);
+        if(oQuery.prepare(strQuery))
+        {
+            oQuery.addBindValue(0,pObj->GetTrackAccount()->GetID());
+            oQuery.addBindValue(1,pObj->GetTrackAccount()->GetID());
+            oQuery.addBindValue(2,pObj->IsStopWin());
+            oQuery.addBindValue(3,(int)(pObj->GetStopWinPriceMode()));
+            oQuery.addBindValue(4,pObj->GetStopWinPrice());
+            oQuery.addBindValue(5,(int)(pObj->GetStopWinOrderType()));
+            oQuery.addBindValue(6,(int)pObj->GetStopWinOrderLimitPriceMode());
+            oQuery.addBindValue(7,pObj->GetStopWinOrderLimitPriceDelta());
+            oQuery.addBindValue(8,pObj->IsStopLoss());
+            oQuery.addBindValue(9,(int)(pObj->GetStopLossPriceMode()));
+            oQuery.addBindValue(10,pObj->GetStopLossPrice());
+            oQuery.addBindValue(11,(int)(pObj->GetStopLossOrderType()));
+            oQuery.addBindValue(12,(int)(pObj->GetStopLossOrderLimitPriceMode()));
+            oQuery.addBindValue(13,pObj->GetStopLossOrderLimitPriceDelta());
+            oQuery.addBindValue(14,(int)(pObj->GetPositionLimitMode()));
+            oQuery.addBindValue(15,pObj->GetPositionLimit());
+            oQuery.addBindValue(16,(int)(pObj->GetBeyondPositionLimitProcessMode()));
+            oQuery.addBindValue(17,pObj->GetInstrument()->GetID());
+            oQuery.addBindValue(18,(int)(pObj->GetOrderSubmitMode()));
+            oQuery.addBindValue(19,(int)(pObj->GetOpenPriceMode()));
+            oQuery.addBindValue(20,(int)(pObj->GetOpenLimitPriceMode()));
+            oQuery.addBindValue(21,pObj->GetOpenLimitPriceDelta());
+            oQuery.addBindValue(22,(int)(pObj->GetOpenLimitPriceDelta()));
+            oQuery.addBindValue(23,(int)(pObj->GetClosePriceMode()));
+            oQuery.addBindValue(24,(int)(pObj->GetCloseLimitPriceMode()));
+            oQuery.addBindValue(25,pObj->GetCloseLimitPriceDelta());
+            dbConn.transaction();
+            oQuery.exec();
+            dbConn.commit();
+           QVariant oLastInsertID =  oQuery.lastInsertId();
+           pObj->SetID(oLastInsertID.toInt());
+        }
     }
 
     void Update(QList<AccountTrackerSetting*> const& lOjbs)
@@ -144,7 +181,48 @@ public:
 
     void Update(AccountTrackerSetting const* pObj)
     {
-
+        QString strQuery = "UPDATE ACCOUNT_TRACKER_SETTING SET TRADE_ACCOUNT_ID = ?,TRACK_ACCOUNT_ID = ?,STOP_WIN = ?,"
+                                       "STOP_WIN_PRICE_MODE = ?,STOP_WIN_PRICE = ? , STOP_WIN_ORDER_TYPE = ?,STOP_WIN_ORDER_LIMIT_PRICE_MODE = ?,"
+                                       "STOP_WIN_ORDER_LIMIT_PRICE_DELTA = ?,STOP_LOSS = ?,STOP_LOSS_PRICE_MODE = ?,STOP_LOSS_PRICE = ?,"
+                                       "STOP_LOSS_ORDER_TYPE = ?,STOP_LOSS_ORDER_LIMIT_MODE = ?,STOP_LOSS_ORDER_LIMIT_PRICE_DELTA = ?,"
+                                       "POSITION_LIMIT_MODE = ?,POSITION_LIMIT = ?,BEYOND_POSITION_LIMIT_PROCESS_MODE = ?,INSTRUMENT_ID = ?,"
+                                       "ORDER_SUBMIT_MODE = ?,OPEN_PRICE_MODE = ?,OPEN_LIMIT_PRICE_MODE = ?,OPEN_LIMIT_PRICE_DELTA = ?,"
+                                        "CLOSE_PRICE_MODE = ?,CLOSE_LIMIT_PRICE_MODE = ?,CLOSE_LIMIT_PRICE_DELTA = ? WHERE ID = ?";
+        QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
+        QSqlQuery oQuery(dbConn);
+        if(oQuery.prepare(strQuery))
+        {
+            oQuery.addBindValue(0,pObj->GetTrackAccount()->GetID());
+            oQuery.addBindValue(1,pObj->GetTrackAccount()->GetID());
+            oQuery.addBindValue(2,pObj->IsStopWin());
+            oQuery.addBindValue(3,(int)(pObj->GetStopWinPriceMode()));
+            oQuery.addBindValue(4,pObj->GetStopWinPrice());
+            oQuery.addBindValue(5,(int)(pObj->GetStopWinOrderType()));
+            oQuery.addBindValue(6,(int)pObj->GetStopWinOrderLimitPriceMode());
+            oQuery.addBindValue(7,pObj->GetStopWinOrderLimitPriceDelta());
+            oQuery.addBindValue(8,pObj->IsStopLoss());
+            oQuery.addBindValue(9,(int)(pObj->GetStopLossPriceMode()));
+            oQuery.addBindValue(10,pObj->GetStopLossPrice());
+            oQuery.addBindValue(11,(int)(pObj->GetStopLossOrderType()));
+            oQuery.addBindValue(12,(int)(pObj->GetStopLossOrderLimitPriceMode()));
+            oQuery.addBindValue(13,pObj->GetStopLossOrderLimitPriceDelta());
+            oQuery.addBindValue(14,(int)(pObj->GetPositionLimitMode()));
+            oQuery.addBindValue(15,pObj->GetPositionLimit());
+            oQuery.addBindValue(16,(int)(pObj->GetBeyondPositionLimitProcessMode()));
+            oQuery.addBindValue(17,pObj->GetInstrument()->GetID());
+            oQuery.addBindValue(18,(int)(pObj->GetOrderSubmitMode()));
+            oQuery.addBindValue(19,(int)(pObj->GetOpenPriceMode()));
+            oQuery.addBindValue(20,(int)(pObj->GetOpenLimitPriceMode()));
+            oQuery.addBindValue(21,pObj->GetOpenLimitPriceDelta());
+            oQuery.addBindValue(22,(int)(pObj->GetOpenLimitPriceDelta()));
+            oQuery.addBindValue(23,(int)(pObj->GetClosePriceMode()));
+            oQuery.addBindValue(24,(int)(pObj->GetCloseLimitPriceMode()));
+            oQuery.addBindValue(25,pObj->GetCloseLimitPriceDelta());
+            oQuery.addBindValue(26,pObj->GetID());
+            dbConn.transaction();
+            oQuery.exec();
+            dbConn.commit();
+        }
     }
 
     void Remove(QList<AccountTrackerSetting*> const& lObjs)
@@ -154,7 +232,14 @@ public:
 
     void Remove(AccountTrackerSetting const* pObjs)
     {
-
+        QString strQuery = "DELETE FROM ACCOUNT_TRACKER_SETTING WHERE ID =? ";
+        QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
+        QSqlQuery oQuery(dbConn);
+        dbConn.transaction();
+        oQuery.prepare(strQuery);
+        oQuery.addBindValue(0,pObjs->GetID());
+        oQuery.exec();
+        dbConn.commit();
     }
 
     template<typename D>

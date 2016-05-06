@@ -41,7 +41,6 @@ SOURCES += main.cpp\
     ObjectContainer.cpp \
     DatabaseManager.cpp \
     Transaction.cpp \
-    AccountTrackSettings.cpp \
     AccountTrackWidget.cpp \
     CTPMarketDataSubscriber.cpp \
     InstrumentResourceManager.cpp \
@@ -54,7 +53,8 @@ SOURCES += main.cpp\
     AccountTrackerData.cpp \
     AccountTrackerPosition.cpp \
     AccountTrackerTradeProcessor.cpp \
-    AccountTrackerEventProcessor.cpp
+    AccountTrackerEventProcessor.cpp \
+    AccountTrackerSetting.cpp
 
 HEADERS  += LoginWidget.h \
     MainWidget.h \

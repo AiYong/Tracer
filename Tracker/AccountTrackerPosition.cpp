@@ -1,4 +1,5 @@
 #include "AccountTrackerPosition.h"
+#include "Position.h"
 
 AccountTrackerPosition::AccountTrackerPosition(
         double dPrice,size_t nQuantity,QDate const& oTradeDay,
@@ -10,6 +11,11 @@ AccountTrackerPosition::AccountTrackerPosition(
 
 }
 
+ AccountTrackerPosition::AccountTrackerPosition(Position const* pPosition)
+ {
+     m_dPrice = pPosition->GetPrice();
+     m_n
+ }
 
 AccountTrackerPosition::~AccountTrackerPosition()
 {

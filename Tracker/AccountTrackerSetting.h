@@ -139,11 +139,23 @@ public://账号
     int GetID() const;
 
     /**
+     * @brief SetID
+     * @param nID
+     */
+    void SetID(int nID);
+
+
+    /**
      * @brief 返回交易账号
      * @return
      */
     Account* GetTradeAccount() const;
 
+    /**
+     * @brief SetTradeAccount
+     * @param pAccount
+     */
+    void SetTradeAccount(Account *pAccount) const;
 
     /**
      * @brief 跟踪账号
@@ -198,42 +210,78 @@ public://持仓限制
 
 public://开仓设置
 
-
+    /**
+     * @brief GetOpenPriceMode
+     * @return
+     */
     OpenPriceMode GetOpenPriceMode() const;
 
-
+    /**
+     * @brief SetOpenPriceMode
+     * @param eOpenPriceMode
+     */
     void SetOpenPriceMode(OpenPriceMode eOpenPriceMode);
 
-
+    /**
+     * @brief GetOpenLimitPriceMode
+     * @return
+     */
     OpenLimitPriceMode GetOpenLimitPriceMode() const;
 
-
+    /**
+     * @brief SetOpenLimitPriceMode
+     * @param eOpenLimitPriceMode
+     */
     void SetOpenLimitPriceMode(OpenLimitPriceMode eOpenLimitPriceMode);
 
-
+    /**
+     * @brief GetOpenLimitPriceDelta
+     * @return
+     */
     double GetOpenLimitPriceDelta() const;
 
-
+    /**
+     * @brief SetOpenLimitPriceDelta
+     * @param eDelta
+     */
     void SetOpenLimitPriceDelta(double eDelta);
 
 public://平仓设置
 
-
+    /**
+     * @brief GetClosePriceMode
+     * @return
+     */
     ClosePriceMode GetClosePriceMode() const;
 
-
+    /**
+     * @brief SetClosePriceMode
+     * @param eClosePriceMode
+     */
     void SetClosePriceMode(ClosePriceMode eClosePriceMode);
 
-
+    /**
+     * @brief GetCloseLimitPriceMode
+     * @return
+     */
     CloseLimitPriceMode GetCloseLimitPriceMode() const;
 
-
+    /**
+     * @brief SetCloseLimitPriceMode
+     * @param eCloseLimitPriceMode
+     */
     void SetCloseLimitPriceMode(CloseLimitPriceMode eCloseLimitPriceMode);
 
-
+    /**
+     * @brief GetCloseLimitPriceDelta
+     * @return
+     */
     double GetCloseLimitPriceDelta() const;
 
-
+    /**
+     * @brief SetCloseLimitPriceDelta
+     * @param eDelta
+     */
     void SetCloseLimitPriceDelta(double eDelta);
 
 
@@ -249,7 +297,7 @@ public: //止盈设置
      * @brief 设置是否止盈
      * @param bStopWin
      */
-    void SetStopWin(bool bStopWin) const;
+    void SetStopWin(bool bStopWin);
 
     /**
      * @brief 返回止盈价格
@@ -426,17 +474,34 @@ public:
 
 private:
 
+    int m_nID;
     Account *m_pTradeAccount;
     Account *m_pTrackAccount;
-    PositionLimitMode m_ePositionLimitMode;
-    double m_dPositionLimit;
-    bool m_bIsStopWin;
+
+    bool m_bStopWin;
     double m_dStopWinPrice;
     StopWinPriceMode m_eStopWinPriceMode;
-    bool m_bIsStopLoss;
+    StopWinOrderType m_eStopWinOrderType;
+    StopWinOrderLimitPriceMode m_eStopWinOrderLimitPriceMode;
+    double m_dStopWinOrderLimitPriceDelta;
+    bool m_bStopLoss;
     double m_dStopLossPrice;
-    StopLossPriceMode m_eStopLossPriceMode;
+    StopWinPriceMode m_eStopLossPriceMode;
+    StopWinOrderType m_eStopLossOrderType;
+    StopWinOrderLimitPriceMode m_eStopLossOrderLimitPriceMode;
+    double m_dStopLossOrderLimitPriceDelta;
+
+    PositionLimitMode m_ePositionLimitMode;
+    double m_dPositionLimit;
+    BeyondPositionLimitProcessMode m_eBeyondPositionLimitProcessMode;
     OrderSubmitMode m_eOrderSubmitMode;
+    OpenPriceMode m_eOpenPriceMode;
+    OpenLimitPriceMode m_eOpenLimitPriceMode;
+    double m_dOpenLimitPriceDelta;
+    ClosePriceMode m_eClosePriceMode;
+    CloseLimitPriceMode m_eCloseLimitPriceMode;
+    double m_dCloseLimitPriceDelta;
+    Instrument *m_pInstrument;
 
 };
 
