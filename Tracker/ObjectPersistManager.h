@@ -22,6 +22,7 @@ public:
     {
         ObjectPersister<T> &oObjectPersister = GetObjectPersister<T>();
         oObjectPersister.Load(pDep,lObjs);
+        return true;
     }
 
     template<typename T>

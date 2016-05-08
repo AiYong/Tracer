@@ -5,10 +5,10 @@
 #include "PositionCost.h"
 #include "OrderOperator.h"
 #include "AccountResourceManager.h"
-#include "TradeResourceManager.h"
+#include "AccountTradeInfo.h"
 
-#include <math.h>
-
+#include <cmath>
+#include <algorithm>
 
 Account::Account(
     QString const& strId,
@@ -29,7 +29,7 @@ Account::~Account()
 
 }
 
-QString const& Account::GetId() const
+QString const& Account::GetID() const
 {
     return m_strId;
 }
@@ -51,17 +51,14 @@ Broker* Account::GetBroker() const
 
 double Account::GetDynamicMargin() const
 {
-    double dMargin = m_dStaticMargin;
-    for(auto InstrumentIter = m_mPositions.begin(); InstrumentIter != m_mPositions.end(); InstrumentIter++)
+    double dDynamicMargin = m_dStaticMargin;
+    for(auto iPos = m_hTradeInfos.begin() ; iPos != m_hTradeInfos.end() ; iPos++)
     {
-        QList<Position*> const&lPositions = *InstrumentIter;
-        for(auto PositionIter = lPositions.begin() ; PositionIter != lPositions.end() ; PositionIter++)
-        {
-            Position *pPosition = *PositionIter;
-            dMargin = dMargin + pPosition->GetTradeDayProfit();
-        }
+        AccountTradeInfo *pTradeInfo = iPos.value();
+        dDynamicMargin += pTradeInfo->GetTradeDayProfit();
+        dDynamicMargin += pTradeInfo->GetTradeDayCommission();
     }
-    return dMargin;
+    return dDynamicMargin;
 }
 
 double Account::GetStaticMargin() const
@@ -71,47 +68,38 @@ double Account::GetStaticMargin() const
 
 double Account::GetAvailableMargin() const
 {
-    return m_dStaticMargin - GetFrezonMargin();
+    return GetDynamicMargin() - GetFrezonMargin();
 }
 
 double Account::GetFrezonMargin() const
 {
-    double dMargin = 0;
-    QMap<Instrument*,QList<Position*>> mPositions = GetPositions();
-    for(auto iInstrumentPosition = mPositions.begin() ; iInstrumentPosition != mPositions.end() ; iInstrumentPosition++)
+    double dFrezonMargin = 0;
+    for(auto iPos = m_hTradeInfos.begin() ; iPos != m_hTradeInfos.end() ; iPos++)
     {
-        QList<Position*> const&lPositions = iInstrumentPosition.value();
-        for(auto iPosition = lPositions.begin(); iPosition != lPositions.end() ;iPosition++)
-        {
-            Position *pPosition = *iPosition;
-            dMargin += pPosition->GetFrezonMargin();
-        }
+        AccountTradeInfo *pTradeInfo = iPos.value();
+        dFrezonMargin += pTradeInfo->GetFrezonMargin();
     }
-    QMap<Instrument*,QList<Order*>> mPositions = GetRunningOrders();
-    for(auto iInstrumentOrder = mPositions.begin() ; iInstrumentOrder != mPositions.end() ; iInstrumentOrder++)
-    {
-        QList<Order*> const&lOrders = iInstrumentOrder.value();
-        for(auto iOrder = lOrders.begin(); iOrder != lOrders.end() ;iOrder++)
-        {
-            Order *pOrder = *iOrder;
-            dMargin += pOrder->GetFrezonMargin();
-        }
-    }
-    return dMargin;
+    return dFrezonMargin;
 }
 
 double Account::GetPositionProfit() const
 {
     double dProfit = 0;
-    QMap<Instrument*,QList<Position*>> mPositions = GetPositions();
-    for(auto iInstrumentPosition = mPositions.begin() ; iInstrumentPosition != mPositions.end() ; iInstrumentPosition++)
+    for(auto iPos = m_hTradeInfos.begin() ; iPos != m_hTradeInfos.end() ; iPos++)
     {
-        QList<Position*> const&lPositions = iInstrumentPosition.value();
-        for(auto iPosition = lPositions.begin(); iPosition != lPositions.end() ;iPosition++)
-        {
-            Position *pPosition = *iPosition;
-            dProfit += pPosition->GetTotalProfit();
-        }
+        AccountTradeInfo *pTradeInfo = iPos.value();
+        dProfit += pTradeInfo->GetPositionProfit();
+    }
+    return dProfit;
+}
+
+double Account::GetTradeDayProfit() const
+{
+    double dProfit = 0;
+    for(auto iPos = m_hTradeInfos.begin() ; iPos != m_hTradeInfos.end() ; iPos++)
+    {
+        AccountTradeInfo *pTradeInfo = iPos.value();
+        dProfit += pTradeInfo->GetTradeDayProfit();
     }
     return dProfit;
 }
@@ -126,165 +114,219 @@ size_t Account::GetAvailableQuantity(Instrument const* pInstrument,Direction eDi
 {
     size_t nResult = 0;
     double dAvailableMargin = GetAvailableMargin();
-    PositionCost *pPositionCost = m_mCosts[pInstrument];
-    if(pPositionCost)
+    auto iPos = m_hTradeInfos.find(pInstrument->GetID());
+    if(iPos != m_hTradeInfos.end())
     {
-        if(pPositionCost->GetMarginMode() == mmRatio)
-        {
-            if(eDirection == dLong)
-            {
-                nResult = floor(dAvailableMargin / (dQuote * pPositionCost->GetLongMargin()) );
-            }
-            else
-            {
-                nResult = floor(dAvailableMargin / (dQuote * pPositionCost->GetShortMargin()) );
-            }
-        }
-        else
-        {
-            if(eDirection == dShort)
-            {
-                nResult = floor(dAvailableMargin / pPositionCost->GetLongMargin());
-            }
-            else
-            {
-                nResult = floor(dAvailableMargin / pPositionCost->GetShortMargin());
-            }
-        }
+        AccountTradeInfo *pTradeInfo = *iPos;
+        nResult = pTradeInfo->GetAvailableQuantity(eDirection,eHedgeFlag,dAvailableMargin,dQuote);
     }
     return nResult;
 }
 
 
-QList<Instrument*> Account::GetInstruments() const
+size_t Account::GetAvailableQuantityWithMargin(Instrument const* pInstrument,Direction eDirection,HedgeFlag eHedgeFlag,double dMargin) const
+{
+    return GetAvailableQuantityWithMargin(pInstrument,eDirection,eHedgeFlag,dMargin,pInstrument->GetLastPrice());
+}
+
+
+size_t Account::GetAvailableQuantityWithMargin(Instrument const* pInstrument,Direction eDirection,HedgeFlag eHedgeFlag,double dMargin,double dQuote) const
+{
+    size_t nResult = 0;
+    auto iPos = m_hTradeInfos.find(pInstrument->GetID());
+    if(iPos != m_hTradeInfos.end())
+    {
+        AccountTradeInfo *pTradeInfo = *iPos;
+        nResult = pTradeInfo->GetAvailableQuantity(eDirection,eHedgeFlag,dMargin,dQuote);
+    }
+    return nResult;
+}
+
+size_t Account::GetPositionQuantity(Instrument const* pInstrument,Direction eDirection,HedgeFlag eHedgeFlag) const
+{
+    size_t nResult = 0;
+    auto iPos = m_hTradeInfos.find(pInstrument->GetID());
+    if(iPos != m_hTradeInfos.end())
+    {
+        AccountTradeInfo *pTradeInfo = *iPos;
+        nResult = pTradeInfo->GetPositionQuantity(eDirection,eHedgeFlag);
+    }
+    return nResult;
+}
+
+QList<Instrument*> const& Account::GetInstruments() const
 {
     return m_lInstrument;
 }
 
-PositionCost* Account::GetPositionCost(Instrument *pInstrument)
+
+Instrument* Account::GetInstrument(const QString &strID) const
 {
-    return m_mCosts[pInstrument];
+    auto iPos = m_hInstrument.find(strID);
+    if(iPos != m_hInstrument.end())
+    {
+        return *iPos;
+    }
+    return nullptr;
 }
 
+PositionCost* Account::GetPositionCost(Instrument *pInstrument) const
+{
+    auto iPos = m_mCosts.find(pInstrument->GetID());
+    if(iPos != m_mCosts.end())
+    {
+        return *iPos;
+    }
+    return nullptr;
+}
 
-QMap<Instrument*,PositionCost*> const& Account::GetAllPositionCost() const
+QMap<QString,PositionCost*> const& Account::GetPositionCosts() const
 {
     return m_mCosts;
 }
 
-
 Order* Account::CreateOrder(Instrument const* pInstrument,Direction eDirection,Operation eOperation,
             HedgeFlag eHedgeFlag,PriceMode ePriceMode,size_t nQuantity,double dQuote)
 {
-    InstrumentResourceManager *pInstrumentReourceManager = m_mInstrumentResources[pInstrument];
-    if(pInstrumentReourceManager)
+    size_t nAvaiableQuantity = 0;
+    double dPrice = dQuote;
+    if(ePriceMode == pmMarketPrice)
     {
-        return pInstrumentReourceManager->CreateOrder(eDirection,eOperation,eHedgeFlag,ePriceMode,nQuantity,dQuote);
+        dPrice = pInstrument->GetLastPrice();
+    }
+    if(eOperation == opOpen)
+    {
+        nAvaiableQuantity = GetAvailableQuantity(pInstrument,eDirection,eHedgeFlag,dPrice);
+    }
+    else
+    {
+        nAvaiableQuantity = GetPositionQuantity(pInstrument,eDirection,eHedgeFlag);
+    }
+    if(nAvaiableQuantity < nQuantity)
+    {
+        return nullptr;
+    }
+    AccountTradeInfo *pTradeInfo = m_hTradeInfos[pInstrument->GetID()];
+    if(pTradeInfo)
+    {
+        return pTradeInfo->CreateOrder(eDirection,eOperation,eHedgeFlag,ePriceMode,nQuantity,dQuote);
     }
     return nullptr;
 }
 
 
-
-Position* Account::OpenOrderHasTraded(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+Position* Account::CreatePosition(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
-    InstrumentResourceManager *pInstrumentReourceManager = m_mInstrumentResources[pOrder->GetInstrument()];
-    if(pInstrumentReourceManager)
+    AccountTradeInfo *pTradeInfo = m_hTradeInfos[pOrder->GetInstrument()->GetID()];
+    if(pTradeInfo)
     {
-        return pInstrumentReourceManager->OpenOrderHasTraded(pOrder,oTimestamp,nQuantity,dPrice);
+        return pTradeInfo->CreatePosition(pOrder,oTimestamp,nQuantity,dPrice);
     }
     return nullptr;
 }
 
 
-QList<Transaction*> Account::CloseOrderHasTraded(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+QList<Transaction*> Account::CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
-    InstrumentResourceManager *pInstrumentReourceManager = m_mInstrumentResources[pOrder->GetInstrument()];
-    if(pInstrumentReourceManager)
+    AccountTradeInfo *pTradeInfo = m_hTradeInfos[pOrder->GetInstrument()->GetID()];
+    if(pTradeInfo)
     {
-        return pInstrumentReourceManager->CloseOrderHasTraded(pOrder,oTimestamp,nQuantity,dPrice);
+        return pTradeInfo->CreateTransaction(pOrder,oTimestamp,nQuantity,dPrice);
     }
     return nullptr;
 }
 
-void Account::OrderHasCancelled(Order *pOrder)
+
+void Account::UpdateOrderStatus(Order *pOrder,OrderStatus eStatus)
 {
-    InstrumentResourceManager *pInstrumentReourceManager = m_mInstrumentResources[pOrder->GetInstrument()];
-    if(pInstrumentReourceManager)
+    AccountTradeInfo *pTradeInfo = m_hTradeInfos[pOrder->GetInstrument()->GetID()];
+    if(pTradeInfo)
     {
-        pInstrumentReourceManager->OrderHasCancelled(pOrder);
+        pTradeInfo->UpdateOrderStatus(pOrder,eStatus);
     }
 }
 
 
-QMap<Instrument*,QList<Order*>> Account::GetRunningOrders()
+QMap<Instrument*,QList<Order*>> Account::GetRunningOrders() const
 {
-    QMap<Instrument*,QList<Order*>> mOrders;
-    for(auto iPos = m_mInstrumentResources.begin(); iPos != m_mInstrumentResources.end() ; iPos++)
+    QMap<Instrument*,QList<Order*>> hOrders;
+    for(auto iPos = m_hInstrument.begin(); iPos != m_hInstrument.end() ; iPos++)
     {
-        Instrument *pInstrument = iPos.key();
-        InstrumentResourceManager *pManager = iPos.value();
-        mOrders.insert(pInstrument,pManager->GetRunningOrders());
+        Instrument *pInstrument = *iPos;
+        auto iInstrumentPos = m_hTradeInfos.find(pInstrument->GetID());
+        if(iInstrumentPos != m_hTradeInfos.end())
+        {
+            AccountTradeInfo *pTradeInfo = iPos.value();
+            hOrders.insert(pInstrument,pTradeInfo->GetRunningOrders());
+        }
     }
-    return mOrders;
+    return hOrders;
 }
 
-QList<Order*> Account::GetRunningOrders(Instrument* pInstrument)
+QList<Order*> Account::GetRunningOrders(Instrument* pInstrument) const
 {
     QList<Order*> lOrders;
-    auto iPos = m_mInstrumentResources.find(pInstrument);
-    if(iPos != m_mInstrumentResources.end())
+    auto iPos = m_hTradeInfos.find(pInstrument->GetID());
+    if(iPos != m_hTradeInfos.end())
     {
-        InstrumentResourceManager *pManager = iPos.value();
-        lOrders.append(pManager->GetRunningOrders());
+        AccountTradeInfo *pTradeInfo = iPos.value();
+        lOrders.append(pTradeInfo->GetRunningOrders());
     }
     return lOrders;
 }
 
-QMap<Instrument*,QList<Order*>> Account::GetOrders()
+QMap<Instrument*,QList<Order*>> Account::GetOrders() const
 {
-    QMap<Instrument*,QList<Order*>> mOrders;
-    for(auto iPos = m_mInstrumentResources.begin(); iPos != m_mInstrumentResources.end() ; iPos++)
+    QMap<Instrument*,QList<Order*>> hOrders;
+    for(auto iPos = m_hInstrument.begin(); iPos != m_hInstrument.end() ; iPos++)
     {
-        Instrument *pInstrument = iPos.key();
-        InstrumentResourceManager *pManager = iPos.value();
-        mOrders.insert(pInstrument,pManager->GetOrders());
+        Instrument *pInstrument = *iPos;
+        auto iInstrumentPos = m_hTradeInfos.find(pInstrument->GetID());
+        if(iInstrumentPos != m_hTradeInfos.end())
+        {
+            AccountTradeInfo *pTradeInfo = iPos.value();
+            hOrders.insert(pInstrument,pTradeInfo->GetRunningOrders());
+        }
     }
-    return mOrders;
+    return hOrders;
 }
 
-QList<Order*> const& Account::GetOrders(Instrument *pInstrument)
+QList<Order*> Account::GetOrders(Instrument *pInstrument) const
 {
     QList<Order*> lOrders;
-    auto iPos = m_mInstrumentResources.find(pInstrument);
-    if(iPos != m_mInstrumentResources.end())
+    auto iPos = m_hTradeInfos.find(pInstrument->GetID());
+    if(iPos != m_hTradeInfos.end())
     {
-        InstrumentResourceManager *pManager = iPos.value();
-        lOrders.append(pManager->GetOrders());
+        AccountTradeInfo *pTradeInfo = iPos.value();
+        lOrders.append(pTradeInfo->GetOrders());
     }
     return lOrders;
 }
 
-QMap<Instrument*,QList<Order*>> const& Account::GetTradeDayOrders() const
+QMap<Instrument*,QList<Order*>> Account::GetTradeDayOrders() const
 {
-    QMap<Instrument*,QList<Order*>> mOrders;
-    for(auto iPos = m_mInstrumentResources.begin(); iPos != m_mInstrumentResources.end() ; iPos++)
+    QMap<Instrument*,QList<Order*>> hOrders;
+    for(auto iPos = m_hInstrument.begin(); iPos != m_hInstrument.end() ; iPos++)
     {
-        Instrument *pInstrument = iPos.key();
-        InstrumentResourceManager *pManager = iPos.value();
-        mOrders.insert(pInstrument,pManager->GetTradeDayOrders());
+        Instrument *pInstrument = *iPos;
+        auto iInstrumentPos = m_hTradeInfos.find(pInstrument->GetID());
+        if(iInstrumentPos != m_hTradeInfos.end())
+        {
+            AccountTradeInfo *pTradeInfo = iPos.value();
+            hOrders.insert(pInstrument,pTradeInfo->GetRunningOrders());
+        }
     }
-    return mOrders;
+    return hOrders;
 }
 
-QList<Order*> const& Account::GetTradeDayOrders(Instrument *pInstrument)
+QList<Order*> const& Account::GetTradeDayOrders(Instrument *pInstrument) const
 {
     QList<Order*> lOrders;
-    auto iPos = m_mInstrumentResources.find(pInstrument);
-    if(iPos != m_mInstrumentResources.end())
+    auto iPos = m_hTradeInfos.find(pInstrument->GetID());
+    if(iPos != m_hTradeInfos.end())
     {
-        InstrumentResourceManager *pManager = iPos.value();
-        lOrders.append(pManager->GetTradeDayOrders());
+        AccountTradeInfo *pTradeInfo = iPos.value();
+        lOrders.append(pTradeInfo->GetTradeDayOrders());
     }
     return lOrders;
 }
@@ -292,25 +334,26 @@ QList<Order*> const& Account::GetTradeDayOrders(Instrument *pInstrument)
 
 QMap<Instrument*,QList<Position*>> Account::GetPositions() const
 {
-    QMap<Instrument*>,QList<Position*>> mPositoins;
+    QMap<Instrument*,QList<Position*>> hPositions;
     for(auto iPos = m_lInstrument.begin() ; iPos != m_lInstrument.end(); iPos++)
     {
-        InstrumentResourceManager *pManager = m_mInstrumentResources[*iPos];
-        if(pManager)
+        Instrument *pInstrument = *iPos;
+        AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
+        if(pTradeInfo)
         {
-            mPositions.insert(*iPos,pManager->GetPositions());
+            hPositions.insert(pInstrument,pTradeInfo->GetPositions());
         }
     }
-    return mPositions;
+    return hPositions;
 }
 
 QList<Position*> Account::GetPositions(Instrument *pInstrument) const
 {
     QList<Position*> lPositions;
-    InstrumentResourceManager *pManager = m_mInstrumentResources[*iPos];
-    if(pManager)
+    AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
+    if(pTradeInfo)
     {
-        lPositions.append(pManager->GetPositions());
+        lPositions.append(pTradeInfo->GetPositions());
     }
     return lPositions;
 }
@@ -319,49 +362,50 @@ QList<Position*> Account::GetPositions(Instrument *pInstrument) const
 QList<Transaction*> const& Account::GetTransactions(Instrument *pInstrument) const
 {
     QList<Transaction*> lTransactions;
-    InstrumentResourceManager *pManager = m_mInstrumentResources[*iPos];
-    if(pManager)
+    AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
+    if(pTradeInfo)
     {
-        lTransactions.append(pManager->GetTransactions());
+        lTransactions.append(pTradeInfo->GetTransactions());
     }
     return lTransactions;
 }
 
 QMap<Instrument*,QList<Transaction*>> const& Account::GetTransactions() const
 {
-    QMap<Instrument*>,QList<Position*>> mTransactions;
+    QMap<Instrument*,QList<Position*>> hTransactions;
     for(auto iPos = m_lInstrument.begin() ; iPos != m_lInstrument.end(); iPos++)
     {
-        InstrumentResourceManager *pManager = m_mInstrumentResources[*iPos];
-        if(pManager)
+        AccountTradeInfo *pTradeInfo  = m_hTradeInfos[*iPos];
+        if(pTradeInfo)
         {
-            mTransactions.insert(*iPos,pManager->GetTransactions());
+            hTransactions.insert(*iPos,pTradeInfo->GetTransactions());
         }
     }
-    return mTransactions;
+    return hTransactions;
 }
 
 QList<Transaction*> const& Account::GetTradeDayTransactions(Instrument *pInstrument)const
 {
     QList<Transaction*> lTransactions;
-    InstrumentResourceManager *pManager = m_mInstrumentResources[*iPos];
-    if(pManager)
+    AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
+    if(pTradeInfo)
     {
-        lTransactions.append(pManager->GetTradeDayTransactions());
+        lTransactions.append(pTradeInfo->GetTradeDayTransactions());
     }
     return lTransactions;
 }
 
 QMap<Instrument*,QList<Transaction*>> const& Account::GetTradeDayTransactions() const
 {
-    QMap<Instrument*>,QList<Position*>> mTransactions;
+    QMap<Instrument*>,QList<Position*>> hTransactions;
     for(auto iPos = m_lInstrument.begin() ; iPos != m_lInstrument.end(); iPos++)
     {
-        InstrumentResourceManager *pManager = m_mInstrumentResources[*iPos];
-        if(pManager)
+        Instrument *pInstrument = *iPos;
+        AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
+        if(pTradeInfo)
         {
-            mTransactions.insert(*iPos,pManager->GetTradeDayTransactions());
+            hTransactions.insert(pInstrument,pManager->GetTradeDayTransactions());
         }
     }
-    return mTransactions;
+    return hTransactions;
 }

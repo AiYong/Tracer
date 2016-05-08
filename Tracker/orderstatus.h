@@ -13,7 +13,8 @@ enum OrderStatus
     osCompletedTraded,
     osCancelling,
     osCancelled,
-    osCancelledAndPartedTraded
+    osCancelledAndPartedTraded,
+    osError
 };
 
 #endif // _TRACKER_ORDERSTATUS_H_

@@ -22,19 +22,36 @@ public:
     }
 };
 
+struct OrderLoadCondition
+{
+    Account *pAccount;
+    Instrument *pInstrument;
+    bool bIsTradeDay;
+};
+
 template<>
-class OrderAccessor<Order>
+class OrderAccessor<OrderLoadCondition>
 {
 public:
 
-    void Load(Account const* pAccount,QList<Order*> &lOrders)
+    void Load(OrderLoadCondition const* pOrderCondition,QList<Order*> &lOrders)
     {
-        QString strQuery = "SELECT * FROM ORDER WHERE ACCOUNT_ID = ?" ;
+        QString strQuery = "SELECT * FROM ORDER WHERE ACCOUNT_ID = ? AND INSTRUMENT_ID = ?" ;
+        if(pOrderCondition->bIsTradeDay)
+        {
+            strQuery.append(" AND TRADE_DAY = ?");
+        }
+        else
+        {
+            strQuery.append(" AND TRADE_DAY < ?");
+        }
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery sqlQuery(dbConn);
         if(sqlQuery.prepare(strQuery))
         {
-            sqlQuery.bindValue(0,pAccount->GetID());
+            sqlQuery.bindValue(0,pOrderCondition->pAccount->GetID());
+            sqlQuery.bindValue(1,pOrderCondition->pInstrument->GetID());
+            sqlQuery.bindValue(2,pOrderCondition->pInstrument->GetTradeDay());
             if(sqlQuery.exec())
             {
                 sqlQuery.first();
@@ -42,7 +59,8 @@ public:
                 {
                     QString strId = sqlQuery.value("ID");
                     QString strInstrument = sqlQuery.value("INSTRUMENT_NAME").toString();
-                    QDateTime oTimestamp = sqlQuery.value("TIMESTAMP").toString();
+                    QDate oTradeDay = sqlQuery.value("TRADE_DAY").toDate();
+                    QTime oTradeTime = sqlQuery.value("TRADE_TIME").toTime();
                     Operation eOperation = (Operation)(sqlQuery.value("OPERATION").toInt());
                     Direction eDirection = (Direction)(sqlQuery.value("DIRECTION").toInt());
                     HedgeFlag eHedgeFlag = (HedgeFlag)(sqlQuery.value("HEDGE_FLAG").toInt());
@@ -51,9 +69,9 @@ public:
                     double dQuote = sqlQuery.value("QUOTE").toDouble();
                     OrderStatus eStatus = (OrderStatus)(sqlQuery.value("STATUS").toInt());
                     size_t nTradeVolume = sqlQuery.value("TRADE_VOLUME");
-                    Instrument *pInstrument = pAccount->GetInstrument(strInstrument);
-                    Order *pOrder = new Order(strId,pAccount,pInstrument,pAccount->GetPositionCost(pInstrument),
-                                              oTimestamp,eOperation,eDirection,eHedgeFlag,ePriceMode,nQuantity,
+                    Instrument *pInstrument = pOrderCondition->pAccount->GetInstrument(strInstrument);
+                    Order *pOrder = new Order(strId,pAccount,pInstrument,pOrderCondition->pAccount->GetPositionCost(pInstrument),
+                                              oTradeDay,oTradeTime,eOperation,eDirection,eHedgeFlag,ePriceMode,nQuantity,
                                               dQuote,eStatus,nTradeVolume);
                     lOrders.append(pOrder);
                 }
@@ -61,14 +79,15 @@ public:
         }
     }
 
-    void Remove(Account const* pAccount)
+    void Remove(OrderLoadCondition const* pOrderCondition)
     {
-        QString strQuery = "DELETE FROM ORDER WHERE ACCOUNT_ID = ? ";
+        QString strQuery = "DELETE FROM ORDER WHERE ACCOUNT_ID = ? AND INSTRUMENT_ID = ? ";
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery oQuery(dbConn);
         oQuery.prepare(strQuery);
         dbConn.transaction();
-        oQuery.bindValue(0,pAccount->GetId());
+        oQuery.bindValue(0,pOrderCondition->pAccount->GetID());
+        oQuery.bindValue(1,pOrderCondition->pInstrument->GetID());
         oQuery.exec();
         dbConn.commit();
     }

@@ -5,7 +5,7 @@
 #include "AccountManager.h"
 #include "Instrument.h"
 #include "AccountTrackerSetting.h"
-
+#include "ObjectPersister.h"
 #include "DatabaseManager.h"
 
 template<typename T>

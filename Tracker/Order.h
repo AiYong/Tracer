@@ -25,7 +25,8 @@ public:
           Account *pAccount,
           Instrument *pInstrument,
           PositionCost *pPositionCost,
-          QDateTime const& oTimestamp,
+          QDate const& oTradeDay,
+          QTime const& oTradeTime,
           Operation eOperation,
           Direction eDirection,
           HedgeFlag eHedgeFlag,
@@ -66,7 +67,13 @@ public:
      * @brief 返回报单时间
      * @return
      */
-    QDateTime GetTimestamp() const;
+    QDate const& GetTradeDay() const;
+
+    /**
+     * @brief GetTradeTime
+     * @return
+     */
+    QTime const& GetTradeTime() const;
 
     /**
      * @brief 返回仓位操作
@@ -133,7 +140,8 @@ private:
     Account *m_pAccount;
     Instrument *m_pInstrument;
     PositionCost *m_pPositionCost;
-    QDateTime m_oTimestamp;
+    QDate m_oTradeDay;
+    QTime m_oTradeTime;
     Operation m_eOperation;
     Direction m_eDirection;
     HedgeFlag m_eHedgeFlag;

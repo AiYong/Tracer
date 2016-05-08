@@ -20,51 +20,62 @@ class Position;
 class Instrument;
 class Transaction;
 class PositionCost;
-class AccountManager;
-class AccountAccessor;
-class TradeResourceManager;
+class AccountTradeInfo;
 
 class Account
 {
 public:
 
     /**
-     * @brief 构造函数
-     * @param parent
+     * @brief Account
+     * @param strID
+     * @param strName
+     * @param strPassword
+     * @param pBroker
      */
-    Account(QString const& strId,QString const& strName,
-            QString const& strPassword,Broker *pBroker);
+    Account(
+            QString const& strID,QString const& strName,
+            QString const& strPassword,Broker *pBroker
+            );
 
     ~Account();
 
 public:
 
     /**
-     * @brief Initlize
+     * @brief Sync
+     * @return
      */
-    bool Initlize();
+    bool Sync();
 
     /**
-     * @brief Destory
+     * @brief IsSync
+     * @return
      */
-    void Destory();
+    bool IsSync() const;
+
+    /**
+     * @brief Clear
+     */
+    void Clear() const;
+
 
 public:
 
     /**
-     * @brief 返回Id
+     * @brief 返回ID
      * @return
      */
     QString const& GetID() const;
 
     /**
-     * @brief  返回账号名称
+     * @brief  返回名称
      * @return
      */
     QString const& GetName() const;
 
     /**
-     * @brief 返回账号密码
+     * @brief 返回密码
      * @return
      */
     QString const& GetPassword() const;
@@ -113,11 +124,6 @@ public:
      */
     double GetTradeDayProfit() const;
 
-    /**
-     * @brief GetTotalProfit
-     * @return
-     */
-    double GetTotalProfit() const;
 
 public:
 
@@ -167,14 +173,14 @@ public:
      * @brief 返回合约列表
      * @return
      */
-    QMap<QString,Instrument*> const& GetInstruments() const;
+    QList<Instrument*> const& GetInstruments() const;
 
     /**
      * @brief GetInstrument
-     * @param strInstrumentName
-     * @return 
+     * @param strID
+     * @return
      */
-    Instrument* GetInstrument(QString const& strInstrumentName) const;
+    Instrument* GetInstrument(QString const& strID) const;
     
 public:
 
@@ -189,7 +195,7 @@ public:
      * @brief 返回所有合约的持仓成本
      * @return
      */
-    QMap<Instrument*,PositionCost*> GetPositionCosts() const;
+    QMap<QString,PositionCost*> const& GetPositionCosts() const;
 
 
 public:
@@ -228,14 +234,14 @@ public:
      * @param dPrice
      * @return
      */
-    Transaction* CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    QList<Transaction*> CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
-     * @brief 设置Order状态
+     * @brief 更新Order状态
      * @param pOrder
      * @param eStatus
      */
-    void SetOrderStatus(Order *pOrder,OrderStatus eStatus);
+    void UpdateOrderStatus(Order *pOrder,OrderStatus eStatus);
 
 public:
 
@@ -350,10 +356,10 @@ private:
     double  m_dStaticMargin;
     QMutex m_mMutex;
 
-    QMap<Instrument*,PositionCost*> m_mCosts;
+    QMap<QString,PositionCost*> m_mCosts;
     QList<Instrument*> m_lInstrument;
-    QMap<QString,Instrument*> m_mInstrument;
-    QMap<Instrument*,TradeResourceManager*> m_mTradeResources;
+    QMap<QString,Instrument*> m_hInstrument;
+    QMap<QString,AccountTradeInfo*> m_hTradeInfos;
 
 };
 

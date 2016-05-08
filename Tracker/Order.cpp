@@ -7,7 +7,8 @@ Order::Order(
       Account *pAccount,
       Instrument *pInstrument,
       PositionCost *pPositionCost,
-      QDateTime const& oTimestamp,
+      QDate const& oTradeDay,
+      QTime const& oTradeTime,
       Operation eOperation,
       Direction eDirection,
       HedgeFlag eHedgeFlag,
@@ -21,7 +22,8 @@ Order::Order(
      m_pAccount(pAccount),
      m_pInstrument(pInstrument),
      m_pPositionCost(pPositionCost),
-     m_oTimestamp(oTimestamp),
+     m_oTradeDay(oTradeDay),
+     m_oTradeTime(oTradeTime),
      m_eOperation(eOperation),
      m_eDirection(eDirection),
      m_eHedgeFlag(eHedgeFlag),
@@ -53,9 +55,14 @@ Instrument* Order::GetInstrument() const
      return m_pPositionCost;
  }
  
-QDateTime Order::GetTimestamp() const
+QDate const& Order::GetTradeDay() const
 {
-    return m_oTimestamp;
+    return m_oTradeDay;
+}
+
+QTime const& Order::GetTradeTime() const
+{
+    return m_oTradeTime;
 }
 
 Operation Order::GetOperation()const

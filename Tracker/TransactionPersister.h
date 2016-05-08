@@ -1,6 +1,9 @@
 #ifndef _TRACKER_TRANSACTIONPERSISTER_H_
 #define _TRACKER_TRANSACTIONPERSISTER_H_
 
+#include <QTime>
+#include <QDate>
+#include <QDateTime>
 
 #include "Account.h"
 #include "Transaction.h"
@@ -23,18 +26,39 @@ public:
     }
 };
 
+struct TransactionLoadCondition
+{
+    Account *pAccount;
+    Instrument *pInstrument;
+    bool bIsTradeDay;
+};
+
 template<>
-class TransactionAccessor<Account>
+class TransactionAccessor<TransactionLoadCondition>
 {
 public:
 
-    void Load(Account const* pAccount,QList<Transaction*> &lTransactions)
+    void Load(TransactionLoadCondition const* pCondition,QList<Transaction*> &lTransactions)
     {
-        QString strQuery = "SELECT *FROM TRANSACTION";
+        QString strQuery = "SELECT *FROM TRANSACTION WHERE ACCOUNT_ID = ? AND INSTRUMENT_ID = ? ";
+        if(pCondition->bIsTradeDay)
+        {
+            strQuery.append(" CLOSE_TIME > ?");
+        }
+        else
+        {
+            strQuery.append("CLOSE_TIME < ?");
+        }
+        QTime oCloseTime = QTime::fromString("010000","hhmmss");
+        QDateTime oTimestamp(pCondition->pInstrument->GetTradeDay(),oCloseTime);
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery oQuery(dbConn);
-        if(oQuery.exec(strQuery))
+        if(oQuery.prepare(strQuery))
         {
+            oQuery.bindValue(0,pCondition->pAccount->GetID());
+            oQuery.bindValue(1,pCondition->pInstrument->GetID());
+            oQuery.bindValue(2,oTimestamp);
+            oQuery.exec();
             while(oQuery.next())
             {
                 QString strID = oQuery.value("INSTRUMENT_ID").toString();
@@ -57,15 +81,16 @@ public:
         }
     }
 
-    void Remove(Account const* pAccount)
+    void Remove(TransactionLoadCondition const* pCondition)
     {
-        QString strQuery = "DELETE FROM WHERE ACCOUNT_ID = ?";
+        QString strQuery = "DELETE FROM WHERE ACCOUNT_ID = ? AND INSTRUMENT_ID = ?";
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery oQuery(dbConn);
         if(oQuery.prepare(strQuery))
         {
             dbConn.transaction();
-            oQuery.bindValue(0,pAccount->GetId());
+            oQuery.bindValue(0,pCondition->pAccount->GetID());
+            oQuery.bindValue(1,pCondition->pAccount->GetID());
             oQuery.exec();
             dbConn.commit();
         }

@@ -1,6 +1,7 @@
 #ifndef _TRACKER_ACCOUNTMANAGER_H_
 #define _TRACKER_ACCOUNTMANAGER_H_
 
+#include <QMap>
 #include <QList>
 #include <QString>
 
@@ -67,9 +68,10 @@ public:
      */
     void DestroyAccount(Account *pAccount);
 
-
-
 private:
+
+    QMap<QString,Account*> m_hNameToAccount;
+    QMap<QString,Account*> m_hIDToAccount;
 
 };
 

@@ -20,7 +20,6 @@ SOURCES += main.cpp\
     AccountTracker.cpp \
     Account.cpp \
     AccountManager.cpp \
-    TrackService.cpp \
     MarketData.cpp \
     Instrument.cpp \
     TrackStrategy.cpp \
@@ -43,7 +42,6 @@ SOURCES += main.cpp\
     Transaction.cpp \
     AccountTrackWidget.cpp \
     CTPMarketDataSubscriber.cpp \
-    InstrumentResourceManager.cpp \
     OrderOperator.cpp \
     AccountResouceManager.cpp \
     CTPOrderSubscriber.cpp \
@@ -54,7 +52,9 @@ SOURCES += main.cpp\
     AccountTrackerPosition.cpp \
     AccountTrackerTradeProcessor.cpp \
     AccountTrackerEventProcessor.cpp \
-    AccountTrackerSetting.cpp
+    AccountTrackerSetting.cpp \
+    AccountTradeInfo.cpp \
+    TradeService.cpp
 
 HEADERS  += LoginWidget.h \
     MainWidget.h \
@@ -62,7 +62,6 @@ HEADERS  += LoginWidget.h \
     Account.h \
     AccountManager.h \
     AccountTracker.h \
-    TrackService.h \
     MarketData.h \
     Instrument.h \
     Platform.h \
@@ -97,7 +96,6 @@ HEADERS  += LoginWidget.h \
     BrokerPersister.h \
     TransactionPersister.h \
     InstrumentPersister.h \
-    TradeResourceManager.h \
     AccountPersister.h \
     OrderSubscriber.h \
     CTPOrderSubscriber.h \
@@ -110,4 +108,7 @@ HEADERS  += LoginWidget.h \
     AccountTrackerTradeProcessor.h \
     AccountTrackerSetting.h \
     OrderError.h \
-    AccountTrackerSettingPersister.h
+    AccountTrackerSettingPersister.h \
+    AccountTrackerPositionPersister.h \
+    AccountTradeInfo.h \
+    TradeService.h

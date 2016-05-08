@@ -1,21 +1,27 @@
 #ifndef _TRACKER_TRACKSERVICE_H_
 #define _TRACKER_TRACKSERVICE_H_
 
+#include <QList>
 #include <QString>
+
+#include "Instrument.h"
+#include "AccountResourceManager.h"
+
 
 class TrackService
 {
 public:
 
-    explicit TrackService(QObject *parent = 0);
+    explicit TrackService();
 
     /**
      * @brief ~TrackService
      */
-    virtual ~TrackService();
+    ~TrackService();
 
 public:
 
+    void SubscribeMarketData(QList<Instrument*> const& lInstruments)    
 
 };
 

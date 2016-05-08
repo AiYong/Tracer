@@ -1,5 +1,5 @@
-#ifndef _TRACKER_TRADERESOURCEMANAGER_H_
-#define _TRACKER_TRADERESOURCEMANAGER_H_
+#ifndef _TRACKER_AccountTradeInfo_H_
+#define _TRACKER_AccountTradeInfo_H_
 
 #include <QList>
 #include <QDate>
@@ -12,6 +12,7 @@
 #include "Hedgeflag.h"
 #include "Operation.h"
 #include "PriceMode.h"
+#include "OrderStatus.h"
 
 class Order;
 class Account;
@@ -20,54 +21,103 @@ class Instrument;
 class Transaction;
 class PositionCost;
 
-class TradeResourceManager
+class AccountTradeInfo
 {
 public:
     
+
     /**
      * @brief 构造函数
      * @param pInstrument
      * @param pPositionCost
      */
-    TradeResourceManager(Account *pAccount,Instrument *pInstrument,PositionCost *pPositionCost);
+    AccountTradeInfo(Account *pAccount,Instrument *pInstrument,PositionCost *pPositionCost);
     
+
     /**
      * @brief 析构函数
      */
-    ~TradeResourceManager();
+    ~AccountTradeInfo();
     
+
 public:
     
+
     /**
      * @brief 初始化
      */
     void Initialize();
     
+
     /**
      * @brief 清理
      */
     void Destroy();
     
+
 public:
     
+
     /**
      * @brief 返回账号
      * @return 
      */
     Account* GetAccount() const;
     
+
     /**
      * @brief 返回合约
      * @return 
      */
     Instrument* GetInstrument() const;
     
+
     /**
      * @brief 返回持仓成本
      * @return 
      */
     PositionCost* GetPositionCost() const;
-    
+
+
+    /**
+     * @brief 返回指定在当前账号的最大开仓数量
+     * @param pInstrument
+     * @return
+     */
+    size_t GetAvailableQuantity(Direction eDirection,HedgeFlag eHedgeFlag,double dMargin,double dQuote) const;
+
+    /**
+     * @brief 返回合约持仓数量
+     * @param pInstrument
+     * @param eDirection
+     * @return
+     */
+    size_t GetPositionQuantity(Direction eDirection,HedgeFlag eHedgeFlag) const;
+
+    /**
+     * @brief GetProfit
+     * @return
+     */
+    double GetPositionProfit() const;
+
+    /**
+     * @brief GetTradeProfit
+     * @return
+     */
+    double GetTradeDayProfit() const;
+
+    /**
+     * @brief GetTradeDayCommission
+     * @return
+     */
+    double GetTradeDayCommission() const;
+
+    /**
+     * @brief GetFrezonMargin
+     * @return
+     */
+    double GetFrezonMargin() const;
+
 public:
     
     /**
@@ -91,7 +141,7 @@ public:
      * @param dPrice
      * @return
      */
-    Position* OpenOrderHasTraded(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    Position* CreatePosition(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
      * @brief 平仓报单成交
@@ -101,13 +151,14 @@ public:
      * @param dPrice
      * @return
      */
-    Transaction* CloseOrderHasTraded(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    Transaction* CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
-     * @brief Order撤销
+     * @brief UpdateOrderStatus
      * @param pOrder
+     * @param eStatus
      */
-    void OrderHasCancelled(Order *pOrder);
+    void UpdateOrderStatus(Order *pOrder,OrderStatus eStatus);
     
  
 public:
@@ -145,19 +196,22 @@ public:
      * @return 
      */
     QList<Position*> GetPositions() const;
-    
+
+
     /**
      * @brief 返回所有的交易事务
      * @return 
      */
     QList<Transaction*> GetTransactions() const;
     
+
     /**
      * @brief 返回交易日交易事务
      * @return 
      */
     QList<Transaction*> GetTradeDayTransactions() const;
     
+
     /**
      * @brief 返回指定交易日交易事务
      * @param oTradeDay
@@ -165,25 +219,24 @@ public:
      */
     QList<Transaction*> GetTransactions(QDate const& oTradeDay) const;
     
-    
+
 private:
     
     void LoadOrders();
     void LoadPositions();
     void LoadTransactions();
-    
-    void SaveOrders();
-    void SavePositions(); 
+    void LoadTradeDayOrders();
+    void LoadTradeDayTransactions();
+
     void SaveOrder(Order *pOrder);
     void UpdateOrder(Order *pOrder);
-    void SavePosition(Position *pPosition);
-    void pdatePosition(Position *pPosition);
-    void SaveTransaction(QList<Transaction*> const& lTransactions);   
-    void RemovePosition(QList<Position*> const& lPositions);
-    
-    void Lock();
-    void Unlock();
 
+    void SavePosition(Position *pPosition);
+    void UpdatePosition(Position *pPosition);
+    void RemovePosition(Position *pPosition);
+
+    void SaveTransaction(QList<Transaction*> const& lTransactions);
+    
 public:
     
     Account *m_pAccount;
@@ -201,4 +254,4 @@ public:
     bool m_bTransactionLoaded;
 };
 
-#endif // _TRACKER_TRADERESOURCEMANAGER_H_
+#endif // _TRACKER_AccountTradeInfo_H_

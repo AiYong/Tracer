@@ -4,6 +4,7 @@
 #include <QDate>
 
 #include "Order.h"
+#include "Account.h"
 #include "Direction.h"
 #include "HedgeFlag.h"
 #include "Instrument.h"
@@ -24,6 +25,10 @@ public:
 
 public:
 
+    void SetID(int nID);
+
+    int GetID() const;
+
     double GetPrice() const;
 
     size_t GetQuantity() const;
@@ -42,6 +47,7 @@ public:
 
 private:
 
+    int m_nID;
     double m_dPrice;
     size_t m_nQuantity;
     QDate m_oTradeDay;
