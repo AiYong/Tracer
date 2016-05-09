@@ -1,50 +1,7 @@
 #include "CTPPlatform.h"
-#include "ThostFtdcTraderApi.h"
 #include "CTPOrderProcessor.h"
 #include "CTPOrderSubscriber.h"
 #include "CTPMarketDataSubscriber.h"
-
-
-class CTPAccountInfoQuerier : public CThostFtdcTraderSpi
-{
-public:
-
-    CTPAccountInfoQuerier(Account *pAccount)
-    {
-
-    }
-
-    ~CTPAccountInfoQuerier()
-    {
-
-    }
-
-public:
-
-    void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
-    {
-
-    }
-
-    void OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *pInstrumentMarginRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
-    {
-
-    }
-
-    void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
-    {
-
-    }
-
-public:
-
-    shared_ptr<AccountInfo> Query()
-    {
-
-    }
-
-
-};
 
 
 

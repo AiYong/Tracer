@@ -54,7 +54,8 @@ SOURCES += main.cpp\
     AccountTrackerEventProcessor.cpp \
     AccountTrackerSetting.cpp \
     AccountTradeInfo.cpp \
-    TradeService.cpp
+    TradeService.cpp \
+    CTPAccountInfoQuerier.cpp
 
 HEADERS  += LoginWidget.h \
     MainWidget.h \
@@ -111,4 +112,5 @@ HEADERS  += LoginWidget.h \
     AccountTrackerSettingPersister.h \
     AccountTrackerPositionPersister.h \
     AccountTradeInfo.h \
-    TradeService.h
+    TradeService.h \
+    CTPAccountInfoQuerier.h
