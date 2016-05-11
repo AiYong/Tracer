@@ -1,10 +1,13 @@
 #include "Instrument.h"
 #include "MarketData.h"
 
-Instrument::Instrument(QString const& strID,QString const& Name,QString const& strVariety,
-           QString const& strExchange,double dPriceMultiple,QDate const& oLastTradeDay,
-           QDateTime const& oCloseTime,QDateTime const& oLastTradeDayCloseTime
+Instrument::Instrument(QString const& strID,QString const& strName,QString const& strVariety,
+           QString const& strExchange,double dPriceMultiple,double dPriceTick,QDate const& oLastTradeDay,
+           QTime const& oCloseTime,QTime const& oLastTradeDayCloseTime
            )
+    :m_strID(strID),m_strName(strName),m_strVariety(strVariety),m_strExchange(strExchange),
+     m_dPriceMultiple(dPriceMultiple),m_dPriceTick(dPriceTick),m_oLastTradeDay(oLastTradeDay),
+     m_oCloseTime(oCloseTime),m_oLastTradeDayCloseTime(oLastTradeDayCloseTime)
 {
 
 }
@@ -34,6 +37,11 @@ double Instrument::GetPriceMultiple() const
     return m_dPriceMultiple;
 }
 
+double Instrument::GetPriceTick() const
+{
+    return m_dPriceTick;
+}
+
 QDate const& Instrument::GetTradeDay() const
 {
     return m_oTradeDay;
@@ -44,9 +52,14 @@ QDate const& Instrument::GetLastTradeDay() const
     return m_oLastTradeDay;
 }
 
-QDateTime const& Instrument::GetCloseTime() const
+QTime const& Instrument::GetCloseTime() const
 {
     return m_oCloseTime;
+}
+
+QTime const& Instrument::GetLastTradeDayCloseTime() const
+{
+    return m_oLastTradeDayCloseTime;
 }
 
 double Instrument::GetLastPrice() const

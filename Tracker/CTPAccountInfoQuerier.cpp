@@ -63,12 +63,32 @@ void CTPAccountInfoQuerier::OnRspQryTradingAccount(CThostFtdcTradingAccountField
 
 void CTPAccountInfoQuerier::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *pInstrumentMarginRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-
+    if( pInstrumentMarginRate != nullptr && (pRspInfo == nullptr || (pRspInfo!= nullptr && pRspInfo->ErrorID == 0 )) )
+    {
+        CThostFtdcInstrumentMarginRateField *pNewInstrumentMarginRate = new CThostFtdcInstrumentMarginRateField;
+        memcpy(pNewInstrumentMarginRate,pInstrumentMarginRate,sizeof(CThostFtdcInstrumentMarginRateField));
+        m_lInstrumentMarginRates.insert(pNewInstrumentMarginRate->InstrumentID,pNewInstrumentMarginRate);
+        if(bIsLast)
+        {
+            m_bCompleted = true;
+            m_cWaitCondition.notify_one();
+        }
+    }
 }
 
 void CTPAccountInfoQuerier::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-
+    if( pInstrumentMarginRate != nullptr && (pRspInfo == nullptr || (pRspInfo!= nullptr && pRspInfo->ErrorID == 0 )) )
+    {
+        CThostFtdcInstrumentCommissionRateField *pNewInstrumentCommissionRate = new CThostFtdcInstrumentCommissionRateField;
+        memcpy(pNewInstrumentCommissionRate,pInstrumentCommissionRate,sizeof(CThostFtdcInstrumentCommissionRateField));
+        m_lInstrumentMarginRates.insert(pNewInstrumentCommissionRate->InstrumentID,pNewInstrumentCommissionRate);
+        if(bIsLast)
+        {
+            m_bCompleted = true;
+            m_cWaitCondition.notify_one();
+        }
+    }
 }
 
 
@@ -109,6 +129,7 @@ std::shared_ptr<AccountInfo> CTPAccountInfoQuerier::Query()
     m_pTradeApi->ReqQryInvestor(&m_oQryInvestor,m_nRequestNumber++);
     if(!m_cWaitCondition.wait_for(std::chrono::seconds(10),oWaitCondition))
     {
+        Clear();
         return oResult;
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -120,6 +141,7 @@ std::shared_ptr<AccountInfo> CTPAccountInfoQuerier::Query()
     m_pTradeApi->ReqQryTradingAccount(&m_oTradingAccount,m_nRequestNumber++);
     if(!m_cWaitCondition.wait_for(std::chrono::seconds(10),oWaitCondition))
     {
+        Clear();
         return oResult;
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -129,6 +151,7 @@ std::shared_ptr<AccountInfo> CTPAccountInfoQuerier::Query()
     m_pTradeApi->ReqQryInstrument(&m_oQryInstrument,m_nRequestNumber++);
     if(!m_cWaitCondition.wait_for(std::chrono::seconds(10),oWaitCondition))
     {
+        Clear();
         return oResult;
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -139,6 +162,7 @@ std::shared_ptr<AccountInfo> CTPAccountInfoQuerier::Query()
     m_pTradeApi->ReqQryInstrumentCommissionRate(&m_oQryInstrumentCommissionRate,m_nRequestNumber++);
     if(!m_cWaitCondition.wait_for(std::chrono::seconds(10),oWaitCondition))
     {
+        Clear();
         return oResult;
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -148,6 +172,7 @@ std::shared_ptr<AccountInfo> CTPAccountInfoQuerier::Query()
     strcpy(m_oQryInstrumentMarginRate.InvestorID,m_pAccount->GetID());
     if(!m_cWaitCondition.wait_for(std::chrono::seconds(10),oWaitCondition))
     {
+        Clear();
         return oResult;
     }
     m_pTradeApi->RegisterSpi(nullptr);

@@ -24,13 +24,14 @@ public:
                 QString strID = oQuery.value("ID").toString();
                 QString strName = oQuery.value("NAME").toString();
                 double  dPriceMultiple = oQuery.value("PRICE_MULTIPLE").toDouble();
+                double dPriceTick = oQuery.value("PRICE_TICK").toDouble();
                 QTime oCloseTime = oQuery.value("CLOSE_TIME").toTime();
                 QTime oLastTradeDayCloseTime = oQuery.value("LAST_TRADE_DAY_CLOSE_TIME").toTime();
                 QString strVariety = oQuery.value("VARIETY").toString();
                 QString strExchange = oQuery.value("EXCHANGE").toString();
                 QDate oLastTradeDay = oQuery.value("LAST_TRADE_DAY").toDate();
-                Instrument *pInstrument = new Instrument(strID,strName,strVariety,strExchange,
-                                                         dPriceMultiple,oLastTradeDay,oCloseTime,oLastTradeDayCloseTime);
+                Instrument *pInstrument = new Instrument(strID,strName,strVariety,strExchange,dPriceMultiple,
+                                                         dPriceTick,oLastTradeDay,oCloseTime,oLastTradeDayCloseTime);
                 lObjs.append(pInstrument);
             }
         }
@@ -38,7 +39,7 @@ public:
 
     void Save(QList<Instrument*> const&lObjs)
     {
-        QString strQuery = "INSERT INTO INSTRUMENT VALUES(?,?,?,?,?,?,?,?)";
+        QString strQuery = "INSERT INTO INSTRUMENT VALUES(?,?,?,?,?,?,?,?,?)";
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery oQuery(dbConn);
         if(oQuery.prepare(strQuery))
@@ -46,6 +47,7 @@ public:
             QVariantList lIDs;
             QVariantList lNames;
             QVariantList lPriceMultiples;
+            QVariantList lPriceTicks;
             QVariantList lCloseTimes;
             QVariantList lLastTradeDayCloseTimes;
             QVariantList lExchanges;
@@ -57,6 +59,7 @@ public:
                 lIDs << pInstrument->GetID();
                 lNames << pInstrument->GetName();
                 lPriceMultiples << pInstrument->GetPriceMultiple();
+                lPriceTicks << pInstrument->GetPriceTick();
                 lCloseTimes << pInstrument->GetCloseTime();
                 lLastTradeDayCloseTimes << pInstrument->GetLastTradeDayCloseTime();
                 lExchanges << pInstrument->GetExchange();
@@ -67,6 +70,7 @@ public:
             oQuery.addBindValue(lIDs);
             oQuery.addBindValue(lNames);
             oQuery.addBindValue(lPriceMultiples);
+            oQuery.addBindValue(lPriceTicks);
             oQuery.addBindValue(lCloseTimes);
             oQuery.addBindValue(lLastTradeDayCloseTimes);
             oQuery.addBindValue(lExchanges);

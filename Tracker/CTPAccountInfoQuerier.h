@@ -13,6 +13,10 @@
 #include "Account.h"
 #include "Platform.h"
 
+/**
+ * @brief The CTPAccountInfoQuerier class
+ * 用于查询账号信息
+ */
 class CTPAccountInfoQuerier : public CThostFtdcTraderSpi
 {
 public:
@@ -42,6 +46,8 @@ public:
     std::shared_ptr<AccountInfo> Query();
 
 private:
+
+    void Clear();
 
     Account *m_pAccount;
     CThostFtdcTraderApi *m_pTradeApi;

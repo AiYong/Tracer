@@ -12,8 +12,9 @@ class Instrument
 public:
 
     Instrument(QString const& strID,QString const& Name,QString const& strVariety,
-               QString const& strExchange,double dPriceMultiple,QDate const& oLastTradeDay,
-               QDateTime const& oCloseTime,QDateTime const& oLastTradeDayCloseTime
+               QString const& strExchange,double dPriceMultiple,double dPriceTick,
+               QDate const& oLastTradeDay,
+               QTime const& oCloseTime,QTime const& oLastTradeDayCloseTime
                );
 
 public:
@@ -49,6 +50,12 @@ public:
     double GetPriceMultiple() const;
 
     /**
+     * @brief 返回价格跳动最小单位
+     * @return
+     */
+    double GetPriceTick() const;
+
+    /**
      * @brief 返回交易日期
      * @return
      */
@@ -64,13 +71,13 @@ public:
      * @brief 收盘时间
      * @return
      */
-    QDateTime const& GetCloseTime() const;
+    QTime const& GetCloseTime() const;
 
     /**
      * @brief GetLastTradeDayCloseTime
      * @return
      */
-    QDateTime const& GetLastTradeDayCloseTime() const;
+    QTime const& GetLastTradeDayCloseTime() const;
 
 public:
 
@@ -169,10 +176,11 @@ private:
     QString m_strVariety;
     QString m_strExchange;
     double m_dPriceMultiple;
+    double m_dPriceTick;
     QDate m_oTradeDay;
     QDate m_oLastTradeDay;
-    QDateTime m_oCloseTime;
-    QDateTime m_oLastTradeDayCloseTime;
+    QTime m_oCloseTime;
+    QTime m_oLastTradeDayCloseTime;
 
     bool m_bFirst;
     QList<MarketData*> m_lMarketDatas;
