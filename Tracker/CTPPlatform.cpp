@@ -2,7 +2,7 @@
 #include "CTPOrderProcessor.h"
 #include "CTPOrderSubscriber.h"
 #include "CTPMarketDataSubscriber.h"
-
+#include "CTPAccountInfoQuerier.h"
 
 
 CTPPlatform::CTPPlatform()

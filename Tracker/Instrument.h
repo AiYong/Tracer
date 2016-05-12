@@ -167,7 +167,7 @@ public:
      * @brief GetMarketDataList
      * @return
      */
-    QList<MarketData*> const& GetMarketDataList() const;
+    QList<MarketData const*> const& GetMarketDataList() const;
 
 private:
 
@@ -183,7 +183,7 @@ private:
     QTime m_oLastTradeDayCloseTime;
 
     bool m_bFirst;
-    QList<MarketData*> m_lMarketDatas;
+    QList<MarketData const*> m_lMarketDatas;
     double m_dLastPrice;
     size_t m_nLastVolume;
     double m_dAmount;

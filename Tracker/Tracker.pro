@@ -12,6 +12,8 @@ TARGET = Tracker
 TEMPLATE = app
 
 INCLUDEPATH +=.
+LIBS += ..\Libs\thosttraderapi.lib
+LIBS += ..\Libs\thostmduserapi.lib
 
 SOURCES += main.cpp\
         LoginWidget.cpp \
@@ -22,7 +24,6 @@ SOURCES += main.cpp\
     AccountManager.cpp \
     MarketData.cpp \
     Instrument.cpp \
-    TrackStrategy.cpp \
     Platform.cpp \
     MarketDataSubscriber.cpp \
     Position.cpp \
@@ -32,12 +33,7 @@ SOURCES += main.cpp\
     Broker.cpp \
     BrokerManager.cpp \
     MarketDataListener.cpp \
-    AccountTrackSettingsManager.cpp \
-    TrackManager.cpp \
     PositionCost.cpp \
-    ObjectPersisterManager.cpp \
-    ObjectPersister.cpp \
-    ObjectContainer.cpp \
     DatabaseManager.cpp \
     Transaction.cpp \
     AccountTrackWidget.cpp \
@@ -81,10 +77,8 @@ HEADERS  += LoginWidget.h \
     Broker.h \
     BrokerManager.h \
     MarketDataListener.h \
-    TrackManager.h \
     PositionCost.h \
     ObjectPersister.h \
-    ObjectContainer.h \
     ObjectPersistManager.h \
     DatabaseManager.h \
     CTPOrderProcessor.h \
@@ -101,7 +95,6 @@ HEADERS  += LoginWidget.h \
     OrderSubscriber.h \
     CTPOrderSubscriber.h \
     OrderStatus.h \
-    AccountTrackerManager.h \
     AccountTrackerEventProcessor.h \
     AccountTrackerWidget.h \
     AccountTrackerData.h \

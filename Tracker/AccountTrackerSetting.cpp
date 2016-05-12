@@ -36,7 +36,7 @@ void AccountTrackerSetting::SetTradeAccount(Account *pAccount)
 
 Account* AccountTrackerSetting::GetTrackAccount() const
 {
-    return m_pTrackAccountl
+    return m_pTrackAccount;
 }
 
 void AccountTrackerSetting::SetTrackAccount(Account *pAccount)
@@ -108,7 +108,7 @@ void AccountTrackerSetting::SetOpenLimitPriceDelta(double dDelta)
 
 ClosePriceMode AccountTrackerSetting::GetClosePriceMode() const
 {
-    return m_eClosePriceMode
+    return m_eClosePriceMode;
 }
 
 void AccountTrackerSetting::SetClosePriceMode(ClosePriceMode eClosePriceMode)
@@ -186,7 +186,7 @@ StopWinOrderLimitPriceMode AccountTrackerSetting::GetStopWinOrderLimitPriceMode(
 
 void AccountTrackerSetting::SetStopWinOrderLimitPriceMode(StopWinOrderLimitPriceMode eStopWinOrderLimitPriceMode)
 {
-    return m_eStopWinOrderLimitPriceMode = eStopWinOrderLimitPriceMode;
+    m_eStopWinOrderLimitPriceMode = eStopWinOrderLimitPriceMode;
 }
 
 double AccountTrackerSetting::GetStopWinOrderLimitPriceDelta() const
@@ -281,7 +281,7 @@ OrderSubmitMode AccountTrackerSetting::GetOrderSubmitMode() const
     return m_eOrderSubmitMode;
 }
 
-void AccountTrackerSetting::SetOrderSubmitMode(OrderSubmitMode eOrderSubmitMode) const
+void AccountTrackerSetting::SetOrderSubmitMode(OrderSubmitMode eOrderSubmitMode)
 {
     m_eOrderSubmitMode = eOrderSubmitMode;
 }

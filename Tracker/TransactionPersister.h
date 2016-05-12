@@ -73,9 +73,9 @@ public:
                 double dCloseCommission = oQuery.value("CLOSE_COMMISSION").toDouble();
                 Direction eDirection = (Direction)(oQuery.value("DIRECTION").toInt());
                 HedgeFlag eHedgeFlag = (HedgeFlag)(oQuery.value("HEDGE_FLAG").toInt());
-                Instrument *pInstrument = pAccount->GetInstrument(strID);
-                Transaction *pTransaction = new Transaction(pAccount,pInstrument,eDirection,eHedgeFlag,nQuantity,dOpenPrice,
-                                                            dClosePrice,dCommission,dOpenCommission,dCloseCommission,dProfit);
+                Instrument *pInstrument = pCondition->pAccount->GetInstrument(strID);
+                Transaction *pTransaction = new Transaction(pCondition->pAccount,pInstrument,eDirection,eHedgeFlag,nQuantity,dOpenPrice,
+                                                            dClosePrice,dCommission,dOpenCommission,dCloseCommission,dProfit,oOpenTime,oCloseTime);
                 lTransactions.append(pTransaction);
             }
         }
@@ -134,7 +134,7 @@ public:
             for(int nCount = 0 ; nCount < lObjs.size() ; nCount++)
             {
                 Transaction *pTransaction = lObjs[nCount];
-                lAccountIDs << pTransaction->GetAccount()->GetId();
+                lAccountIDs << pTransaction->GetAccount()->GetID();
                 lInstrumentIDs << pTransaction->GetInstrument()->GetID();
                 lOpenTimes << pTransaction->GetOpenTime();
                 lCloseTimes << pTransaction->GetCloseTime();

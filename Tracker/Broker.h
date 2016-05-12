@@ -20,7 +20,8 @@ public:
     Broker(QString const& strId,
         QString const& strName,
         QStringList const& lTradeUrl,
-        QStringList const& lMarketDataUrl
+        QStringList const& lMarketDataUrl,
+        QString const& strPlatform
         );
 
     /**
@@ -154,7 +155,7 @@ private:
     QStringList m_lTradeUrl;
     QStringList m_lMarketDataUrl;
     QList<Account*> m_lAccounts;
-
+    QString m_strPlatform;
 };
 
 #endif // _TRACKER_BROKER_H_

@@ -25,7 +25,7 @@ public:
     Broker* GetBroker(QString const& strBrokerID) const;
 
     Broker* Create(QString const& strName,QString const& strID,
-                   QStringList const& strTradeUrl,QStringList const&strMarketDataUrl);
+                   QStringList const& strTradeUrl,QStringList const&strMarketDataUrl,QString const& strPlatform);
 
     void Update(Broker *pBroker);
 

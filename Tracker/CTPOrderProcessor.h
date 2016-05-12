@@ -16,15 +16,15 @@ class CTPOrder
 {
 public:
 
-    CTPOrder(Order *pOrder,OrderListener *pOrderListener);
+    CTPOrder(Order const*pOrder,OrderListener const*pOrderListener);
 
     ~CTPOrder();
 
 public:
 
-    Order* GetOrder() const;
+    Order const* GetOrder() const;
 
-    OrderListener* GetOrderListener() const;
+    OrderListener const* GetOrderListener() const;
 
     CThostFtdcInputOrderField const& GetInputOrder() const;
 
@@ -36,12 +36,12 @@ private:
 
     void Init();
 
-    Order *m_pOrder;
-    OrderListener *m_pOrderListener;
+    Order const*m_pOrder;
+    OrderListener const*m_pOrderListener;
     CThostFtdcInputOrderField m_oInputOrder;
-    CThostFtdcInputOrderActionField m_oInputOrderAction;
+    mutable CThostFtdcInputOrderActionField m_oInputOrderAction;
     CThostFtdcOrderField m_oOrderResponse;
-
+    int m_nOrderActionRef;
 };
 
 enum CTPOrderOperationType
@@ -61,7 +61,7 @@ class CTPOrderProcessor : public CThostFtdcTraderSpi ,public OrderProcessor
 {
 public:
 
-    CTPOrderProcessor(Account *pAccount);
+    CTPOrderProcessor(Account const*pAccount);
 
 
     ~CTPOrderProcessor();
@@ -77,7 +77,7 @@ public:
 
 public:
 
-    void Submit(Order const* pOrder,OrderListener *pOrderListener);
+    void Submit(Order const* pOrder,OrderListener const* pOrderListener);
 
 
     void Cancel(Order const* pOrder);

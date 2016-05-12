@@ -140,7 +140,7 @@ void Instrument::Updated(MarketData const*pMarketData)
     m_dSuttlementPrice = pMarketData->GetLastPrice();
 }
 
-QList<MarketData*> const& Instrument::GetMarketDataList() const
+QList<MarketData const*> const& Instrument::GetMarketDataList() const
 {
     return m_lMarketDatas;
 }

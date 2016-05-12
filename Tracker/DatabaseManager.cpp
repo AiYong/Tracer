@@ -2,9 +2,10 @@
 
 DatabaseManager::DatabaseManager()
 {
-    QSqlDatabase oDatabase = QSqlDatabase::addDatabase("QSQLITE");
+    QSqlDatabase oDatabase = QSqlDatabase::addDatabase("QSQLITE","Tracker");
     oDatabase.setDatabaseName("Tracker.db");
-    oDatabase.open();
+    bool b = oDatabase.open();
+	b = false;
 }
 
 DatabaseManager::~DatabaseManager()
@@ -20,6 +21,6 @@ DatabaseManager* DatabaseManager::GetInstance()
 
 QSqlDatabase DatabaseManager::GetDatabase()
 {
-    return QSqlDatabase::database();
+    return QSqlDatabase::database("Tracker");
 }
 

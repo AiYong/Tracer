@@ -6,9 +6,9 @@
 
 Position::Position(
     QString const& strID,
-    Account *pAccount,
-    Instrument *pInstrument,
-    PositionCost *pPositionCost,
+    Account const*pAccount,
+    Instrument const*pInstrument,
+    PositionCost const*pPositionCost,
     QDateTime const& oTimestamp,
     Direction eDirection,
     HedgeFlag eHedgeFlag,
@@ -32,17 +32,17 @@ Position::~Position()
 
 }
 
-QString const& Position::GetId() const
+QString const& Position::GetID() const
 {
     return m_strID;
 }
 
-Account* Position::GetAccount() const
+Account const* Position::GetAccount() const
 {
     return m_pAccount;
 }
 
-Instrument* Position::GetInstrument() const
+Instrument const* Position::GetInstrument() const
 {
     return m_pInstrument;
 }
@@ -133,6 +133,7 @@ double Position::GetTradeDayProfit() const
             dProfit = (m_pInstrument->GetPreSuttlementPrice() - m_pInstrument->GetLastPrice()) * m_pInstrument->GetPriceMultiple();
         }
     }
+    return dProfit;
 }
 
 double Position::GetTotalProfit() const
@@ -162,13 +163,13 @@ Transaction* Position::Close(QDateTime const& oTimestamp,size_t nQuantity,double
         dProfit = (dPrice - m_dPrice) * m_pInstrument->GetPriceMultiple();
     }
     Transaction *pTransaction = new Transaction(m_pAccount,m_pInstrument,m_eDirection,m_eHedgeFlag,
-                                                m_nQuantity,m_dPrice,dPrice,m_dCommission + dCloseCommission,
-                                                m_dCommission,dCloseCommission,dProfit);
+                                                nQuantity,m_dPrice,dPrice,m_dCommission + dCloseCommission,
+                                                m_dCommission,dCloseCommission,dProfit,m_oTimestamp,oTimestamp);
     return pTransaction;
 }
 
 
-double Position::GetCommission(double dPrice)
+double Position::GetCommission(double dPrice) const
 {
     double dCommission = 0;
     if(m_pPositionCost->GetCommissionMode() == cmRatio)

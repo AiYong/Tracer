@@ -35,7 +35,7 @@ public:
      * @brief GetID
      * @return
      */
-    int GetID() const;
+    QString const& GetID() const;
 
     /**
      * @brief GetName

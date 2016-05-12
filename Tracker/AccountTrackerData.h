@@ -22,7 +22,7 @@ public:
      * @brief GetID
      * @return
      */
-    int GetID() const;
+    QString const& GetID() const;
 
     /**
      * @brief GetName
@@ -72,6 +72,8 @@ public:
 
 private:
 
+    Account *m_pTradeAccount ;
+    QList<AccountTrackerSetting*> m_lTrackerSettings;
 
 };
 

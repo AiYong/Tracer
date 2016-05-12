@@ -35,7 +35,7 @@ public:
      */
     Account(
             QString const& strID,QString const& strName,
-            QString const& strPassword,Broker *pBroker
+            QString const& strPassword,Broker const* pBroker
             );
 
     ~Account();
@@ -84,7 +84,7 @@ public:
      * @brief 返回经纪商
      * @return
      */
-    Broker* GetBroker() const;
+    Broker const* GetBroker() const;
 
 public:
 
@@ -224,7 +224,7 @@ public:
      * @param dPrice
      * @return
      */
-    Position* CreatePosition(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    Position* CreatePosition(Order const*pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
      * @brief 创建交易事务对象
@@ -234,7 +234,7 @@ public:
      * @param dPrice
      * @return
      */
-    QList<Transaction*> CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    QList<Transaction*> CreateTransaction(Order const*pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
      * @brief 更新Order状态
@@ -249,14 +249,14 @@ public:
      * @brief 返回当前正在执行的Order
      * @return
      */
-    QMap<Instrument*,QList<Order*>> GetRunningOrders();
+    QMap<Instrument*,QList<Order*>> GetRunningOrders() const;
 
     /**
      * @brief 返回指定合约正在执行的Order
      * @param pInstrument
      * @return
      */
-    QList<Order*> GetRunningOrders(Instrument* pInstrument);
+    QList<Order*> GetRunningOrders(Instrument* pInstrument) const;
 
 
     /**
@@ -352,7 +352,7 @@ private:
     QString m_strId;
     QString m_strName;
     QString m_strPassword;
-    Broker *m_pBroker;
+    Broker const*m_pBroker;
     double  m_dStaticMargin;
     QMutex m_mMutex;
 

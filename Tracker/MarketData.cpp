@@ -31,9 +31,9 @@ MarketData::MarketData()
    MarketData:: MarketData(
            QDateTime const& timestamp,
            double lastPrice,
-           double lastVolume,
-           size_t lastAmount,
-           size_t amount,
+           size_t lastVolume,
+           double lastAmount,
+           double amount,
            size_t volume,
            double highestLimitPrice,
            double lowestLimitPrice,
@@ -80,9 +80,9 @@ MarketData::MarketData()
    MarketData:: MarketData(
            QDateTime const& timestamp,
            double lastPrice,
-           double lastVolume,
-           size_t lastAmount,
-           size_t amount,
+           size_t lastVolume,
+           double lastAmount,
+           double amount,
            size_t volume,
            double highestLimitPrice,
            double lowestLimitPrice,
@@ -137,9 +137,9 @@ MarketData::MarketData()
     MarketData::MarketData(
             QDateTime const& timestamp,
             double lastPrice,
-            double lastVolume,
-            size_t lastAmount,
-            size_t amount,
+            size_t lastVolume,
+            double lastAmount,
+            double amount,
             size_t volume,
             double highestLimitPrice,
             double lowestLimitPrice,
@@ -201,9 +201,9 @@ MarketData::MarketData()
     MarketData::MarketData(
             QDateTime const& timestamp,
             double lastPrice,
-            double lastVolume,
-            size_t lastAmount,
-            size_t amount,
+            size_t lastVolume,
+            double lastAmount,
+            double amount,
             size_t volume,
             double highestLimitPrice,
             double lowestLimitPrice,
@@ -274,9 +274,9 @@ MarketData::MarketData()
     MarketData::MarketData(
             QDateTime const& timestamp,
             double lastPrice,
-            double lastVolume,
-            size_t lastAmount,
-            size_t amount,
+            size_t lastVolume,
+            double lastAmount,
+            double amount,
             size_t volume,
             double highestLimitPrice,
             double lowestLimitPrice,
@@ -410,6 +410,10 @@ MarketData::MarketData()
      {
      }
 
+    QDateTime const& MarketData::GetTimestamp()const
+    {
+        return mTimestamp;
+    }
     double MarketData::GetLastPrice()  const
     {
         return mLastPrice;
@@ -432,12 +436,12 @@ MarketData::MarketData()
     }
 
 
-    size_t MarketData::GetLastAmount() const
+    double MarketData::GetLastAmount() const
     {
        return  mLastAmount;
     }
 
-    void MarketData::SetLastAmount(size_t lastAmount)
+    void MarketData::SetLastAmount(double lastAmount)
     {
         mLastAmount = lastAmount;
     }
@@ -584,7 +588,7 @@ MarketData::MarketData()
     }
 
 
-    size_t MarketData::GetBidVolume(Size depth)const
+    size_t MarketData::GetBidVolume(size_t depth)const
     {
         return mBidVolume[depth - 1];
     }

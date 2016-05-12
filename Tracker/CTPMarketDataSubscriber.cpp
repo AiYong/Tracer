@@ -13,16 +13,16 @@ CTPMarketDataSubscriber::~CTPMarketDataSubscriber()
 bool CTPMarketDataSubscriber::Initialize()
 {
     m_nRequestNumber++;
-    mMdApi = CThostFtdcMdApi::CreateFtdcMdApi();
+    m_pMdApi = CThostFtdcMdApi::CreateFtdcMdApi();
     QStringList lMarketDataUrl = m_pAccount->GetBroker()->GetMarketDataUrl();
     for(auto iPos = lMarketDataUrl.begin(); iPos != lMarketDataUrl.end(); iPos++)
     {
         QString strUrl = *iPos;
-        mMdApi->RegisterFront(const_cast<char*>(strUrl.toStdString().c_str()));
+        m_pMdApi->RegisterFront(const_cast<char*>(strUrl.toStdString().c_str()));
     }
     m_pMdApi->RegisterSpi(this);
     strcpy(m_oLoginInfo.BrokerID,m_pAccount->GetBroker()->GetId().toStdString().c_str());
-    strcpy(m_oLoginInfo.UserID,m_pAccount->GetId().toStdString().c_str());
+    strcpy(m_oLoginInfo.UserID,m_pAccount->GetID().toStdString().c_str());
     strcpy(m_oLoginInfo.Password,m_pAccount->GetPassword().toStdString().c_str());
     m_pMdApi->Init();
     return true;
@@ -63,7 +63,7 @@ void CTPMarketDataSubscriber::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUs
 {
     if(pRspInfo == nullptr || pRspInfo != nullptr && pRspInfo->ErrorID == 0)
     {
-        QList<Instrument*> lInstruments = m_pAccount->GetInstruments().values();
+        QList<Instrument*> lInstruments = m_pAccount->GetInstruments();
         char** strCodes = new char*[lInstruments.size()];
         for(int nCount = 0 ; nCount < lInstruments.size() ; nCount++)
         {
@@ -102,7 +102,7 @@ void CTPMarketDataSubscriber::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentF
 
 void CTPMarketDataSubscriber::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData)
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     QString strInstrumentID(pDepthMarketData->InstrumentID);
     Instrument *pInstrument = m_lInstruments[strInstrumentID];
     QString strTimestamp(pDepthMarketData->TradingDay);

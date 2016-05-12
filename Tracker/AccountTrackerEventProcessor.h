@@ -59,7 +59,7 @@ public:
 
 public:
 
-    Order* GetOrder() const;
+    Order const* GetOrder() const;
 
 private:
 
@@ -90,7 +90,7 @@ public:
 
 private:
 
-    Position *m_pPosition;
+    Position const*m_pPosition;
 
 };
 
@@ -118,7 +118,7 @@ public:
 
 private:
 
-    Transaction *m_pTransaction;
+    Transaction const*m_pTransaction;
 
 };
 
@@ -132,7 +132,7 @@ public:
 
 public:
 
-    AccountTrackerSetting* GetTrackerSetting() const;
+    AccountTrackerSetting const* GetTrackerSetting() const;
 
 private:
 
@@ -144,7 +144,7 @@ class TrackerErrorEvent : public TrackerOrderEvent
 {
 public:
 
-    TrackerErrorEvent(Order *pOrder,OrderError);
+    TrackerErrorEvent(Order const*pOrder,OrderError);
 
     ~TrackerErrorEvent();
 
@@ -165,7 +165,7 @@ class TrackerMarketDataEvent : public TrackerEvent
 {
 public:
 
-    TrackerMarketDataEvent(MarketData *pMarketData,Instrument *pInsrument);
+    TrackerMarketDataEvent(MarketData const*pMarketData,Instrument const*pInsrument);
 
     ~TrackerMarketDataEvent();
 
@@ -248,12 +248,12 @@ public:
 
 private:
 
-    bool m_bStop;
-    QMutex m_lLock;
-    QWaitCondition m_cWaitCondition;
-    QQueue<TrackerEvent*> m_qEvents;
-    QMap<AccountTrackerSetting*,AccountTrackerTradeData> m_hTradeDatas;
-    QMap<AccountTrackerSetting*,AccountTrackerTradeProcessor*> m_hTradeProcessors;
+    mutable bool m_bStop;
+    mutable QMutex m_lLock;
+    mutable QWaitCondition m_cWaitCondition;
+    mutable QQueue<TrackerEvent*> m_qEvents;
+    mutable QMap<AccountTrackerSetting const*,AccountTrackerTradeData> m_hTradeDatas;
+    mutable QMap<AccountTrackerSetting const*,AccountTrackerTradeProcessor*> m_hTradeProcessors;
 
 };
 

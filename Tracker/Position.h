@@ -2,6 +2,7 @@
 #define _TRACKER_POSITION_H_
 
 #include <QObject>
+#include <QDateTime>
 #include "Direction.h"
 #include "HedgeFlag.h"
 
@@ -16,9 +17,9 @@ public:
 
     Position(
         QString const& strID,
-        Account *pAccount,
-        Instrument *pInstrument,
-        PositionCost *pPositionCost,
+        Account const*pAccount,
+        Instrument const*pInstrument,
+        PositionCost const*pPositionCost,
         QDateTime const& oTimestamp,
         Direction eDirection,
         HedgeFlag eHedgeFlag,
@@ -36,19 +37,19 @@ public:
      * @brief 持仓所属账号
      * @return
      */
-    Account* GetAccount() const;
+    Account const* GetAccount() const;
 
     /**
      * @brief 持仓合约合约
      * @return
      */
-    Instrument* GetInstrument() const;
+    Instrument const* GetInstrument() const;
 
     /**
      * @brief GetPositionCost
      * @return
      */
-    PositionCost* GetPositionCost() const;
+    PositionCost const* GetPositionCost() const;
 
     /**
      * @brief 返回开仓时间
@@ -124,12 +125,12 @@ public:
 
 private:
 
-    double GetCommission(double dPrice);
+    double GetCommission(double dPrice) const;
 
     QString m_strID;
-    Account *m_pAccount;
-    Instrument *m_pInstrument;
-    PositionCost *m_pPositionCost;
+    Account const*m_pAccount;
+    Instrument const*m_pInstrument;
+    PositionCost const*m_pPositionCost;
     QDateTime m_oTimestamp;
     Direction m_eDirection;
     HedgeFlag m_eHedgeFlag;

@@ -33,12 +33,12 @@ public:
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery oQuery(dbConn);
         oQuery.prepare(strQuery);
-        oQuery.bindValue(0,pAccount->GetId());
+        oQuery.bindValue(0,pAccount->GetID());
         if(oQuery.exec())
         {
             while(oQuery.next())
             {
-                QString strInstrumentName = oQuery.value("INSTRUMENT_ID").toString();
+                QString strInstrumentID = oQuery.value("INSTRUMENT_ID").toString();
                 CommissionMode eCommissitionMode = (CommissionMode)(oQuery.value("COMMISSION_MODE").toInt());
                 MarginMode eMarginMode = (MarginMode)(oQuery.value("MARGIN_MODE").toInt());
                 double dLongOpenCommission = oQuery.value("LONG_OPEN_COMMISSION").toDouble();
@@ -47,7 +47,7 @@ public:
                 double dShortCloseCommission = oQuery.value("SHORT_CLOSE_COMMISSION").toDouble();
                 double dLongMargin = oQuery.value("LONG_MARGIN").toDouble();
                 double dShortMargin = oQuery.value("SHORT_MARGIN").toDouble();
-                Instrument *pInstrument = pAccount->GetInstrument(strInstrument);
+                Instrument *pInstrument = pAccount->GetInstrument(strInstrumentID);
                 PositionCost *pPositionCost = new PositionCost(pAccount,pInstrument,eCommissitionMode,dLongOpenCommission,
                                                                dShortOpenCommission,dLongCloseCommission,dShortCloseCommission,
                                                                eMarginMode,dLongMargin,dShortMargin);
@@ -63,7 +63,7 @@ public:
         dbConn.transaction();
         QSqlQuery oQuery(dbConn);
         oQuery.prepare(strQuery);
-        oQuery.bindValue(0,pAccount->GetId());
+        oQuery.bindValue(0,pAccount->GetID());
         oQuery.exec();
         dbConn.commit();
     }
@@ -102,7 +102,7 @@ public:
            for(int nCount = 0 ; nCount < lObjs.size() ; nCount++)
            {
                PositionCost *pPositionCost = lObjs[nCount];
-               lAccountIDs << pPositionCost->GetAccount()->GetId();
+               lAccountIDs << pPositionCost->GetAccount()->GetID();
                lNames << pPositionCost->GetInstrument()->GetName();
                lCommissionModes << (int)(pPositionCost->GetCommissionMode());
                lMarginModes << (int)(pPositionCost->GetMarginMode());
@@ -137,7 +137,7 @@ public:
         if(oQuery.prepare(strQuery))
         {
             dbConn.transaction();
-            oQuery.bindValue(0,pObj->GetAccount()->GetId());
+            oQuery.bindValue(0,pObj->GetAccount()->GetID());
             oQuery.bindValue(1,pObj->GetInstrument()->GetName());
             oQuery.bindValue(2,(int)(pObj->GetCommissionMode()));
             oQuery.bindValue(3,(int)(pObj->GetMarginMode()));
@@ -174,10 +174,10 @@ public:
             QVariantList lShortCloseCommissions;
             QVariantList lLongMargins;
             QVariantList lShortMargins;
-            for(int nCount = 0 ; nCount < lObjs.size() ; nCount++)
+            for(int nCount = 0 ; nCount < lOjbs.size() ; nCount++)
             {
-                PositionCost *pPositionCost = lObjs[nCount];
-                lAccountIDs << pPositionCost->GetAccount()->GetId();
+                PositionCost *pPositionCost = lOjbs[nCount];
+                lAccountIDs << pPositionCost->GetAccount()->GetID();
                 lNames << pPositionCost->GetInstrument()->GetName();
                 lCommissionModes << (int)(pPositionCost->GetCommissionMode());
                 lMarginModes << (int)(pPositionCost->GetMarginMode());
@@ -223,7 +223,7 @@ public:
             oQuery.bindValue(5,pObj->GetShortCloseCommission());
             oQuery.bindValue(6,pObj->GetLongMargin());
             oQuery.bindValue(7,pObj->GetShortMargin());
-            oQuery.bindValue(8,pObj->GetAccount()->GetId());
+            oQuery.bindValue(8,pObj->GetAccount()->GetID());
             oQuery.bindValue(9,pObj->GetInstrument()->GetName());
             oQuery.exec();
             dbConn.commit();
@@ -244,7 +244,7 @@ public:
             for(int nCount = 0 ; nCount < lObjs.size() ; nCount++)
             {
                 PositionCost *pPositionCost = lObjs[nCount];
-                lAccountIDs << pPositionCost->GetAccount()->GetId();
+                lAccountIDs << pPositionCost->GetAccount()->GetID();
             }
             oQuery.addBindValue(lAccountIDs);
             oQuery.addBindValue(lNames);
@@ -262,7 +262,7 @@ public:
         if(oQuery.prepare(strQuery))
         {
             dbConn.transaction();
-            oQuery.bindValue(0,pObjs->GetAccount()->GetId());
+            oQuery.bindValue(0,pObjs->GetAccount()->GetID());
             oQuery.bindValue(1,pObjs->GetInstrument()->GetName());
             oQuery.exec();
             dbConn.commit();

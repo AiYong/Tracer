@@ -346,7 +346,7 @@ public:
 
 public:
 
-     QDateTime GetTimestamp() const;
+     QDateTime const& GetTimestamp() const;
 
      /**
      * @brief getLastPrice
@@ -519,7 +519,7 @@ public:
     /**
      * @brief getPreSettlementPrice
      */
-    void GetPreSettlementPrice() const;
+    double GetPreSettlementPrice() const;
 
     /**
      * @brief setPreSettlementPrice

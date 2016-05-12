@@ -4,9 +4,8 @@
 #include <QList>
 #include <QDate>
 #include <QDateTime>
-#include <QReadLocker>
-#include <QWriteLocker>
-#include <QReadWriteLock>
+#include <QMutex>
+#include <QMutexLocker>
 
 #include "Direction.h"
 #include "Hedgeflag.h"
@@ -141,7 +140,7 @@ public:
      * @param dPrice
      * @return
      */
-    Position* CreatePosition(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    Position* CreatePosition(Order const* pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
      * @brief 平仓报单成交
@@ -151,14 +150,14 @@ public:
      * @param dPrice
      * @return
      */
-    Transaction* CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    QList<Transaction*> CreateTransaction(Order const *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
      * @brief UpdateOrderStatus
      * @param pOrder
      * @param eStatus
      */
-    void UpdateOrderStatus(Order *pOrder,OrderStatus eStatus);
+    void UpdateOrderStatus(Order const* pOrder,OrderStatus eStatus);
     
  
 public:
@@ -167,14 +166,14 @@ public:
      * @brief 返回所有Order
      * @return 
      */
-    QList<Order*> GetOrders() const;
+    QList<Order*> GetOrders();
     
     /**
      * @brief 返回指定交易日Order
      * @param oTradeDay
      * @return 
      */
-    QList<Order*> GetOrders(QDate const& oTradeDay) const;
+    QList<Order*> GetOrders(QDate const& oTradeDay);
     
     /**
      * @brief 返回当前交易日Order
@@ -202,7 +201,7 @@ public:
      * @brief 返回所有的交易事务
      * @return 
      */
-    QList<Transaction*> GetTransactions() const;
+    QList<Transaction*> GetTransactions();
     
 
     /**
@@ -217,7 +216,7 @@ public:
      * @param oTradeDay
      * @return 
      */
-    QList<Transaction*> GetTransactions(QDate const& oTradeDay) const;
+    QList<Transaction*> GetTransactions(QDate const& oTradeDay) ;
     
 
 private:
@@ -248,7 +247,7 @@ public:
     QList<Position*> m_lPositions;
     QList<Transaction*> m_lTradeDayTransactions;
     QList<Transaction*> m_lTransactions;
-    QReadWriteLock m_mLock;
+    mutable QMutex m_mLock;
     bool m_bOrderLoaded;
     bool m_bPositionLoaded;
     bool m_bTransactionLoaded;

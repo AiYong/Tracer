@@ -6,7 +6,12 @@ AccountTracker::AccountTracker(QObject *parent)
 
 }
 
-int AccountTracker::GetID() const
+AccountTracker::~AccountTracker()
+{
+
+}
+
+QString const& AccountTracker::GetID() const
 {
     return m_pData->GetID();
 }

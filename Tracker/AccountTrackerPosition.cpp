@@ -5,7 +5,7 @@ AccountTrackerPosition::AccountTrackerPosition(
         double dPrice,size_t nQuantity,QDate const& oTradeDay,
         Instrument *pInstrument,Direction eDirection,HedgeFlag eHedgeFlag
         )
-    :m_pAccount(pAccount),m_dPrice(dPrice),m_nQuantity(nQuantity),m_oTradeDay(oTradeDay),m_pInstrument(pInstrument),
+    :m_dPrice(dPrice),m_nQuantity(nQuantity),m_oTradeDay(oTradeDay),m_pInstrument(pInstrument),
      m_eDirection(eDirection),m_eHedgeFlag(eHedgeFlag)
 {
 
@@ -44,6 +44,11 @@ double AccountTrackerPosition::GetPrice() const
 size_t AccountTrackerPosition::GetQuantity() const
 {
     return m_nQuantity;
+}
+
+void AccountTrackerPosition::SetQuantity(size_t nQuantity)
+{
+    m_nQuantity = nQuantity;
 }
 
 QDate const& AccountTrackerPosition::GetTradeDay() const

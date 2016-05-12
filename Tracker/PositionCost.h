@@ -44,8 +44,8 @@ public:
      * @param dShortMargin
      */
     PositionCost(
-              Account *pAccount,
-              Instrument *pInstrument,
+              Account const*pAccount,
+              Instrument const*pInstrument,
               CommissionMode eCommissionMode,
               double dLongOpenCommission,
               double dShortOpenCommission,
@@ -58,13 +58,13 @@ public:
 
 public:
 
-    Account* GetAccount() const;
+    Account const* GetAccount() const;
 
     /**
      * @brief GetInstrument
      * @return
      */
-    Instrument* GetInstrument() const;
+    Instrument const* GetInstrument() const;
 
     /**
      * @brief 返回手续费收取模式
@@ -116,8 +116,8 @@ public:
 
 private:
 
-    Account *m_pAccount;
-    Instrument *m_pInstrument;
+    Account const*m_pAccount;
+    Instrument const*m_pInstrument;
     CommissionMode m_eCommissionMode;
     double m_dLongOpenCommission;
     double m_dShortOpenCommission;

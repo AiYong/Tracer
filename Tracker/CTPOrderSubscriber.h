@@ -16,7 +16,7 @@ class CTPOrderSubscriber: public OrderSubscriber,public CThostFtdcTraderSpi
 {
 public:
 
-    CTPOrderSubscriber(Account *pAccount);
+    CTPOrderSubscriber(Account const* pAccount);
 
     ~CTPOrderSubscriber();
 

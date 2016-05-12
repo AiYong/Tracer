@@ -13,15 +13,12 @@ class Position;
 class PositionCost;
 class OrderOperator;
 
-
-
-
 class Order
 {
 public:
 
     Order(
-          int nId,
+          QString const& strId,
           Account *pAccount,
           Instrument *pInstrument,
           PositionCost *pPositionCost,
@@ -43,7 +40,7 @@ public:
      * @brief 返回ID
      * @return
      */
-    int GetId() const;
+    QString const& GetId() const;
 
     /**
      * @brief 返回报单账号
@@ -136,7 +133,7 @@ private:
     template<typename T>
     friend class ObjectPersister;
 
-    int m_nId;
+    QString  m_strId;
     Account *m_pAccount;
     Instrument *m_pInstrument;
     PositionCost *m_pPositionCost;

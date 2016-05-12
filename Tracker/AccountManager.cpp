@@ -1,7 +1,14 @@
 #include "AccountManager.h"
 #include "ObjectPersistManager.h"
+#include "AccountPersister.h"
 
 #include <algorithm>
+
+AccountManager* AccountManager::GetInstance()
+{
+    static AccountManager oInstance;
+    return &oInstance;
+}
 
 AccountManager::AccountManager()
 {
@@ -38,7 +45,7 @@ Account* AccountManager::GetAccountWithName(QString const& strName)
 
 Account* AccountManager::GetAccountWithID(QString const& strId)
 {
-    auto iPos = m_hIDToAccount.find(strName);
+    auto iPos = m_hIDToAccount.find(strId);
     if(iPos != m_hIDToAccount.end())
     {
         return *iPos;

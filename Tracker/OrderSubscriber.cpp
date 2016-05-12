@@ -3,18 +3,18 @@
 #include <QMutexLocker>
 
 
-SubscriberProcessor::AddSubscriber(OrderListener *pOrderListener)
+void SubscriberProcessor::AddSubscriber(OrderListener *pOrderListener)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     if(!m_lListener.contains(pOrderListener))
     {
         m_lListener.append(pOrderListener);
     }
 }
 
-SubscriberProcessor::RemoveSubscriber(OrderListener *pOrderListener)
+void SubscriberProcessor::RemoveSubscriber(OrderListener *pOrderListener)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     if(m_lListener.contains(pOrderListener))
     {
         m_lListener.removeAll(pOrderListener);
@@ -23,7 +23,7 @@ SubscriberProcessor::RemoveSubscriber(OrderListener *pOrderListener)
 
 void SubscriberProcessor::PublishSubmit(Order *pOrder)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     std::for_each(m_lListener.begin(),m_lListener.end(),[&](OrderListener *pOrderListener){
         pOrderListener->OnSubmited(pOrder);
     });
@@ -31,7 +31,7 @@ void SubscriberProcessor::PublishSubmit(Order *pOrder)
 
 void SubscriberProcessor::PublishOpen(Order *pOrder, Position *pPosition)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     std::for_each(m_lListener.begin(),m_lListener.end(),[&](OrderListener *pOrderListener){
         pOrderListener->OnOpen(pOrder,pPosition);
     });
@@ -39,7 +39,7 @@ void SubscriberProcessor::PublishOpen(Order *pOrder, Position *pPosition)
 
 void SubscriberProcessor::PublishClose(Order *pOrder, Transaction *pTransaction)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     std::for_each(m_lListener.begin(),m_lListener.end(),[&](OrderListener *pOrderListener){
         pOrderListener->OnClose(pOrder,pTransaction);
     });
@@ -47,7 +47,7 @@ void SubscriberProcessor::PublishClose(Order *pOrder, Transaction *pTransaction)
 
 void SubscriberProcessor::PublishCancelling(Order *pOrder)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     std::for_each(m_lListener.begin(),m_lListener.end(),[&](OrderListener *pOrderListener){
         pOrderListener->OnCancelling(pOrder);
     });
@@ -55,7 +55,7 @@ void SubscriberProcessor::PublishCancelling(Order *pOrder)
 
 void SubscriberProcessor::PublishCancelled(Order *pOrder)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     std::for_each(m_lListener.begin(),m_lListener.end(),[&](OrderListener *pOrderListener){
         pOrderListener->OnCancelled(pOrder);
     });
@@ -63,16 +63,16 @@ void SubscriberProcessor::PublishCancelled(Order *pOrder)
 
 void SubscriberProcessor::PublishError(Order *pOrder, OrderError eOrderError)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     std::for_each(m_lListener.begin(),m_lListener.end(),[&](OrderListener *pOrderListener){
         pOrderListener->OnError(pOrder,eOrderError);
     });
 }
 
-OrderSubscriber::OrderSubscriber(Account *pAccount)
-    :m_pAccount(pAccount)
+OrderSubscriber::OrderSubscriber(Account const*pAccount)
+    :m_pAccount(const_cast<Account*>(pAccount))
 {
-    Init(pAccount->GetInstruments().values());
+    Init(pAccount->GetInstruments());
 }
 
 OrderSubscriber::~OrderSubscriber()

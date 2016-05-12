@@ -1,6 +1,6 @@
 #include "CTPOrderSubscriber.h"
 
-CTPOrderSubscriber::CTPOrderSubscriber(Account *pAccount)
+CTPOrderSubscriber::CTPOrderSubscriber(Account const*pAccount)
     :OrderSubscriber(pAccount)
 {
 
@@ -15,7 +15,7 @@ bool CTPOrderSubscriber::Initialize()
 {
     m_nRequestNumber = 1;
     strcpy(m_oLoginInfo.BrokerID,m_pAccount->GetBroker()->GetId().toStdString().c_str());
-    strcpy(m_oLoginInfo.UserID,m_pAccount->GetId().toStdString().c_str());
+    strcpy(m_oLoginInfo.UserID,m_pAccount->GetID().toStdString().c_str());
     strcpy(m_oLoginInfo.Password,m_pAccount->GetPassword().toStdString().c_str());
     m_pTradeApi = CThostFtdcTraderApi::CreateFtdcTraderApi();
     m_pTradeApi->SubscribePrivateTopic(THOST_TERT_QUICK);
@@ -28,8 +28,9 @@ bool CTPOrderSubscriber::Initialize()
         m_pTradeApi->RegisterFront(const_cast<char*>(strUrl.toStdString().c_str()));
     }
     strcpy(m_oSettlementInfoConfirm.BrokerID,m_pAccount->GetBroker()->GetId().toStdString().c_str());
-    strcpy(m_oSettlementInfoConfirm.InvestorID,m_pAccount->GetId().toStdString().c_str());
+    strcpy(m_oSettlementInfoConfirm.InvestorID,m_pAccount->GetID().toStdString().c_str());
     m_pTradeApi->Init();
+    return true;
 }
 
 void CTPOrderSubscriber::Destroy()
@@ -88,7 +89,7 @@ void CTPOrderSubscriber::OnRspOrderAction(CThostFtdcInputOrderActionField *pInpu
             switch (pInputOrderAction->ActionFlag) {
             case THOST_FTDC_AF_Delete:
             {
-                m_pAccount->SetOrderStatus(pOrder,osCancelling);
+                m_pAccount->UpdateOrderStatus(pOrder,osCancelling);
                 SubscriberProcessor *pProcessor = m_hProcessor[pOrder->GetInstrument()->GetID()];
                 pProcessor->PublishCancelling(pOrder);
             }
@@ -116,7 +117,7 @@ void CTPOrderSubscriber::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nReque
 void CTPOrderSubscriber::OnRtnOrder(CThostFtdcOrderField *pInputOrder)
 {
     QString strOrderRef(pInputOrder->OrderRef);
-    Order pOrder = m_hOrders[strOrderRef];
+    Order *pOrder = m_hOrders[strOrderRef];
     if(pOrder)
     {
         switch (pInputOrder->OrderStatus) {
@@ -135,7 +136,7 @@ void CTPOrderSubscriber::OnRtnOrder(CThostFtdcOrderField *pInputOrder)
 void CTPOrderSubscriber::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
     QString strOrderRef(pTrade->OrderRef);
-    Order *pOrder = m_hOrders[pTrade];
+    Order *pOrder = m_hOrders[strOrderRef];
     if(pOrder)
     {
         QString strTradeTime(pTrade->TradeDate);
@@ -151,8 +152,12 @@ void CTPOrderSubscriber::OnRtnTrade(CThostFtdcTradeField *pTrade)
         }
         else
         {
-            Transaction *pTransaction = m_pAccount->CreateTransaction(pOrder,oTradeTime,nQuantity,dPrice);
-            pProcessor->PublishClose(pOrder,pTransaction);
+            QList<Transaction*> lTransactions = m_pAccount->CreateTransaction(pOrder,oTradeTime,nQuantity,dPrice);
+            for(int nCount = 0; nCount < lTransactions.size() ; nCount++)
+            {
+                Transaction *pTransaction = lTransactions[nCount];
+                pProcessor->PublishClose(pOrder,pTransaction);
+            }
         }
     }
 }
@@ -170,7 +175,7 @@ void CTPOrderSubscriber::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderA
 
 Order* CTPOrderSubscriber::EnsureOrder(CThostFtdcInputOrderField *pInputOrder)
 {
-   Order *pResult = nullptr;
+   Order *pOrder = nullptr;
    QString strOrderRef(pInputOrder->OrderRef);
    if(m_hOrders.contains(strOrderRef))
    {
@@ -181,7 +186,7 @@ Order* CTPOrderSubscriber::EnsureOrder(CThostFtdcInputOrderField *pInputOrder)
        Instrument *pInstrument = m_pAccount->GetInstrument(pInputOrder->InstrumentID);
        if(pInstrument == nullptr)
        {
-           return pResult;
+           return pOrder;
        }
        Direction eDirection = dLong;
        if(pInputOrder->Direction == THOST_FTDC_D_Sell)
@@ -207,9 +212,9 @@ Order* CTPOrderSubscriber::EnsureOrder(CThostFtdcInputOrderField *pInputOrder)
        {
            eOperation = opOpen;
        }
-       pResult = m_pAccount->CreateOrder(pInstrument,eDirection,eOperation,eHedgeFlag,ePriceMode,
+       pOrder = m_pAccount->CreateOrder(pInstrument,eDirection,eOperation,eHedgeFlag,ePriceMode,
                                                pInputOrder->VolumeTotalOriginal,pInputOrder->LimitPrice);
-       m_hOrders.insert(strOrderRef,pResult);
+       m_hOrders.insert(strOrderRef,pOrder);
    }
-   return pResult;
+   return pOrder;
 }

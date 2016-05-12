@@ -14,7 +14,7 @@ Account::Account(
     QString const& strId,
     QString const& strName,
     QString const& strPassword,
-    Broker *pBroker
+    Broker const*pBroker
     )
     :m_strId(strId),
      m_strName(strName),
@@ -29,6 +29,10 @@ Account::~Account()
 
 }
 
+void Account::Clear() const
+{
+
+}
 QString const& Account::GetID() const
 {
     return m_strId;
@@ -44,7 +48,7 @@ QString const& Account::GetPassword() const
     return m_strPassword;
 }
 
-Broker* Account::GetBroker() const
+Broker const* Account::GetBroker() const
 {
     return m_pBroker;
 }
@@ -215,7 +219,7 @@ Order* Account::CreateOrder(Instrument const* pInstrument,Direction eDirection,O
 }
 
 
-Position* Account::CreatePosition(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+Position* Account::CreatePosition(Order const* pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
     AccountTradeInfo *pTradeInfo = m_hTradeInfos[pOrder->GetInstrument()->GetID()];
     if(pTradeInfo)
@@ -226,14 +230,14 @@ Position* Account::CreatePosition(Order *pOrder,QDateTime const& oTimestamp,size
 }
 
 
-QList<Transaction*> Account::CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+QList<Transaction*> Account::CreateTransaction(Order const*pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
     AccountTradeInfo *pTradeInfo = m_hTradeInfos[pOrder->GetInstrument()->GetID()];
     if(pTradeInfo)
     {
         return pTradeInfo->CreateTransaction(pOrder,oTimestamp,nQuantity,dPrice);
     }
-    return nullptr;
+    return QList<Transaction*>();
 }
 
 
@@ -253,10 +257,10 @@ QMap<Instrument*,QList<Order*>> Account::GetRunningOrders() const
     for(auto iPos = m_hInstrument.begin(); iPos != m_hInstrument.end() ; iPos++)
     {
         Instrument *pInstrument = *iPos;
-        auto iInstrumentPos = m_hTradeInfos.find(pInstrument->GetID());
-        if(iInstrumentPos != m_hTradeInfos.end())
+        auto iTradeInforPos = m_hTradeInfos.find(pInstrument->GetID());
+        if(iTradeInforPos != m_hTradeInfos.end())
         {
-            AccountTradeInfo *pTradeInfo = iPos.value();
+            AccountTradeInfo *pTradeInfo = iTradeInforPos.value();
             hOrders.insert(pInstrument,pTradeInfo->GetRunningOrders());
         }
     }
@@ -281,10 +285,10 @@ QMap<Instrument*,QList<Order*>> Account::GetOrders() const
     for(auto iPos = m_hInstrument.begin(); iPos != m_hInstrument.end() ; iPos++)
     {
         Instrument *pInstrument = *iPos;
-        auto iInstrumentPos = m_hTradeInfos.find(pInstrument->GetID());
-        if(iInstrumentPos != m_hTradeInfos.end())
+        auto iTradeInforPos = m_hTradeInfos.find(pInstrument->GetID());
+        if(iTradeInforPos != m_hTradeInfos.end())
         {
-            AccountTradeInfo *pTradeInfo = iPos.value();
+            AccountTradeInfo *pTradeInfo = iTradeInforPos.value();
             hOrders.insert(pInstrument,pTradeInfo->GetRunningOrders());
         }
     }
@@ -309,17 +313,17 @@ QMap<Instrument*,QList<Order*>> Account::GetTradeDayOrders() const
     for(auto iPos = m_hInstrument.begin(); iPos != m_hInstrument.end() ; iPos++)
     {
         Instrument *pInstrument = *iPos;
-        auto iInstrumentPos = m_hTradeInfos.find(pInstrument->GetID());
-        if(iInstrumentPos != m_hTradeInfos.end())
+        auto iTradeInforPos = m_hTradeInfos.find(pInstrument->GetID());
+        if(iTradeInforPos != m_hTradeInfos.end())
         {
-            AccountTradeInfo *pTradeInfo = iPos.value();
+            AccountTradeInfo *pTradeInfo = iTradeInforPos.value();
             hOrders.insert(pInstrument,pTradeInfo->GetRunningOrders());
         }
     }
     return hOrders;
 }
 
-QList<Order*> const& Account::GetTradeDayOrders(Instrument *pInstrument) const
+QList<Order*> Account::GetTradeDayOrders(Instrument *pInstrument) const
 {
     QList<Order*> lOrders;
     auto iPos = m_hTradeInfos.find(pInstrument->GetID());
@@ -359,7 +363,7 @@ QList<Position*> Account::GetPositions(Instrument *pInstrument) const
 }
 
 
-QList<Transaction*> const& Account::GetTransactions(Instrument *pInstrument) const
+QList<Transaction*>  Account::GetTransactions(Instrument *pInstrument) const
 {
     QList<Transaction*> lTransactions;
     AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
@@ -370,21 +374,23 @@ QList<Transaction*> const& Account::GetTransactions(Instrument *pInstrument) con
     return lTransactions;
 }
 
-QMap<Instrument*,QList<Transaction*>> const& Account::GetTransactions() const
+QMap<Instrument*,QList<Transaction*>>  Account::GetTransactions() const
 {
-    QMap<Instrument*,QList<Position*>> hTransactions;
+    QMap<Instrument*,QList<Transaction*>> hTransactions;
     for(auto iPos = m_lInstrument.begin() ; iPos != m_lInstrument.end(); iPos++)
     {
-        AccountTradeInfo *pTradeInfo  = m_hTradeInfos[*iPos];
-        if(pTradeInfo)
+        Instrument *pInstrument = *iPos;
+        auto iTradeInfoPos = m_hTradeInfos.find(pInstrument->GetID());
+        if(iTradeInfoPos != m_hTradeInfos.end())
         {
+            AccountTradeInfo *pTradeInfo  = iTradeInfoPos.value();
             hTransactions.insert(*iPos,pTradeInfo->GetTransactions());
         }
     }
     return hTransactions;
 }
 
-QList<Transaction*> const& Account::GetTradeDayTransactions(Instrument *pInstrument)const
+QList<Transaction*> Account::GetTradeDayTransactions(Instrument *pInstrument)const
 {
     QList<Transaction*> lTransactions;
     AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
@@ -395,17 +401,36 @@ QList<Transaction*> const& Account::GetTradeDayTransactions(Instrument *pInstrum
     return lTransactions;
 }
 
-QMap<Instrument*,QList<Transaction*>> const& Account::GetTradeDayTransactions() const
+QMap<Instrument*,QList<Transaction*>> Account::GetTradeDayTransactions() const
 {
-    QMap<Instrument*>,QList<Position*>> hTransactions;
+    QMap<Instrument*,QList<Transaction*>> hTransactions;
     for(auto iPos = m_lInstrument.begin() ; iPos != m_lInstrument.end(); iPos++)
     {
         Instrument *pInstrument = *iPos;
-        AccountTradeInfo *pTradeInfo  = m_hTradeInfos[pInstrument->GetID()];
-        if(pTradeInfo)
+        auto iTradeInfoPos  = m_hTradeInfos.find(pInstrument->GetID());
+        if(iTradeInfoPos != m_hTradeInfos.end())
         {
-            hTransactions.insert(pInstrument,pManager->GetTradeDayTransactions());
+            AccountTradeInfo *pTradeInfo = iTradeInfoPos.value();
+            hTransactions.insert(pInstrument,pTradeInfo->GetTradeDayTransactions());
         }
     }
     return hTransactions;
+}
+
+/**
+ * @brief GenOrderID
+ * @return
+ */
+QString Account::GenOrderID()
+{
+    return "";
+}
+
+/**
+ * @brief GenPositionID
+ * @return
+ */
+QString Account::GenPositionID()
+{
+    return "";
 }

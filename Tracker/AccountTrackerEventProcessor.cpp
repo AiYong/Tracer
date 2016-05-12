@@ -22,6 +22,11 @@ TrackerOrderEvent::TrackerOrderEvent(const Order *pOrder, EventType eType)
 
 }
 
+TrackerOrderEvent::~TrackerOrderEvent()
+{
+
+}
+
 Order const* TrackerOrderEvent::GetOrder() const
 {
     return m_pOrder;
@@ -59,7 +64,7 @@ Transaction const* TrackerOrderCloseEvent::GetTransaction() const
 }
 
 TrackerOperationEvent::TrackerOperationEvent(AccountTrackerSetting *pTrackerSetting, EventType eType)
-    :m_pTrackerSetting(pTrackerSetting),m_eType(eType)
+    :m_pTrackerSetting(pTrackerSetting),TrackerEvent(eType)
 {
 
 }
@@ -74,13 +79,13 @@ AccountTrackerSetting const* TrackerOperationEvent::GetTrackerSetting() const
     return m_pTrackerSetting;
 }
 
-TrackerMarketDataEvent::TrackerMarketDataEvent(MarketData *pMarketData, Instrument *pInstrument)
+TrackerMarketDataEvent::TrackerMarketDataEvent(MarketData const*pMarketData, Instrument const*pInstrument)
     :m_pMarketData(pMarketData),m_pInstrument(pInstrument),TrackerEvent(tMarketData)
 {
 
 }
 
-MarketData const* TrackerMarketDataEvent::GetInstrument() const
+MarketData const* TrackerMarketDataEvent::GetMarketData() const
 {
     return m_pMarketData;
 }
@@ -91,7 +96,7 @@ Instrument const* TrackerMarketDataEvent::GetInstrument() const
 }
 
 
-TrackerErrorEvent::TrackerErrorEvent(Order *pOrder, OrderError eError)
+TrackerErrorEvent::TrackerErrorEvent(Order const*pOrder, OrderError eError)
     :m_eError(eError),TrackerOrderEvent(pOrder,tError)
 {
 
@@ -109,7 +114,7 @@ OrderError TrackerErrorEvent::GetError() const
 
 void AccountTrackerEventProcessor::StartTrack(AccountTrackerSetting *pAccountTrackerSetting)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOperationEvent *pEvent = new TrackerOperationEvent(pAccountTrackerSetting,tStartTrack);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -117,25 +122,22 @@ void AccountTrackerEventProcessor::StartTrack(AccountTrackerSetting *pAccountTra
 
 void AccountTrackerEventProcessor::StopTrack(AccountTrackerSetting *pAccountTrackerSetting)
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOperationEvent *pEvent = new TrackerOperationEvent(pAccountTrackerSetting,tStopTrack);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
 }
 
-void AccountTrackerEventProcessor::StopAllTrack()
-{
-
-}
 
 void AccountTrackerEventProcessor::Stop()
 {
-
+    m_bStop = true;
+    m_cWaitCondition.wakeOne();
 }
 
 void AccountTrackerEventProcessor::MarketDataUpdated(Instrument const* pInstrument,MarketData const* pMarketData) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerMarketDataEvent *pEvent = new TrackerMarketDataEvent(pMarketData,pInstrument);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -143,7 +145,7 @@ void AccountTrackerEventProcessor::MarketDataUpdated(Instrument const* pInstrume
 
 void AccountTrackerEventProcessor::OnSubmited(Order const* pOrder) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOrderEvent *pEvent = new TrackerOrderEvent(pOrder,tSubmit);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -151,7 +153,7 @@ void AccountTrackerEventProcessor::OnSubmited(Order const* pOrder) const
 
 void AccountTrackerEventProcessor::OnQueued(Order const* pOrder) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOrderEvent *pEvent = new TrackerOrderEvent(pOrder,tQueued);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -159,7 +161,7 @@ void AccountTrackerEventProcessor::OnQueued(Order const* pOrder) const
 
 void AccountTrackerEventProcessor::OnOpen(Order const* pOrder,Position const* pPosition) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOrderOpenEvent *pEvent = new TrackerOrderOpenEvent(pPosition,pOrder);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -167,7 +169,7 @@ void AccountTrackerEventProcessor::OnOpen(Order const* pOrder,Position const* pP
 
 void AccountTrackerEventProcessor::OnClose(Order const* pOrder,Transaction const* pTransaction) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOrderCloseEvent *pEvent = new TrackerOrderCloseEvent(pTransaction,pOrder);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -175,7 +177,7 @@ void AccountTrackerEventProcessor::OnClose(Order const* pOrder,Transaction const
 
 void AccountTrackerEventProcessor::OnCancelling(Order const* pOrder) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOrderEvent *pEvent = new TrackerOrderEvent(pOrder,tCancelling);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -183,7 +185,7 @@ void AccountTrackerEventProcessor::OnCancelling(Order const* pOrder) const
 
 void AccountTrackerEventProcessor::OnCancelled(Order const* pOrder) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerOrderEvent *pEvent = new TrackerOrderEvent(pOrder,tCancelled);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -191,7 +193,7 @@ void AccountTrackerEventProcessor::OnCancelled(Order const* pOrder) const
 
 void AccountTrackerEventProcessor::OnError(Order const* pOrder,OrderError eError) const
 {
-    QMutexLocker oLocker(m_lLock);
+    QMutexLocker oLocker(&m_lLock);
     TrackerErrorEvent *pEvent = new TrackerErrorEvent(pOrder,eError);
     m_qEvents.push_back(pEvent);
     m_cWaitCondition.wakeOne();
@@ -220,7 +222,7 @@ void AccountTrackerEventProcessor::run()
             switch (pEvent->GetType()) {
             case tSubmit:
             {
-                TrackerOrderEvent *pOrderEvent = dynamic_cast<TrackerOrderEvent*>(pEvent);
+                TrackerOrderEvent *pOrderEvent = static_cast<TrackerOrderEvent*>(pEvent);
                 Order const* pOrder = pOrderEvent->GetOrder();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
                 {
@@ -245,7 +247,7 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tOpen:
             {
-                TrackerOrderOpenEvent *pOrderEvent = dynamic_cast<TrackerOrderOpenEvent*>(pEvent);
+                TrackerOrderOpenEvent *pOrderEvent = static_cast<TrackerOrderOpenEvent*>(pEvent);
                 Order const* pOrder = pOrderEvent->GetOrder();
                 Position const* pPosition = pOrderEvent->GetPosition();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
@@ -271,7 +273,7 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tClose:
             {
-                TrackerOrderCloseEvent *pOrderEvent = dynamic_cast<TrackerOrderCloseEvent*>(pEvent);
+                TrackerOrderCloseEvent *pOrderEvent = static_cast<TrackerOrderCloseEvent*>(pEvent);
                 Order const* pOrder = pOrderEvent->GetOrder();
                 Transaction const* pTransaction = pOrderEvent->GetTransaction();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
@@ -297,7 +299,7 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tCancelling:
             {
-                TrackerOrderEvent *pOrderEvent = dynamic_cast<TrackerOrderEvent*>(pEvent);
+                TrackerOrderEvent *pOrderEvent = static_cast<TrackerOrderEvent*>(pEvent);
                 Order const* pOrder = pOrderEvent->GetOrder();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
                 {
@@ -322,7 +324,7 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tCancelled:
             {
-                TrackerOrderEvent *pOrderEvent = dynamic_cast<TrackerOrderEvent*>(pEvent);
+                TrackerOrderEvent *pOrderEvent = static_cast<TrackerOrderEvent*>(pEvent);
                 Order const* pOrder = pOrderEvent->GetOrder();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
                 {
@@ -330,7 +332,7 @@ void AccountTrackerEventProcessor::run()
                     AccountTrackerTradeData oTradeData = m_hTradeDatas.value(iPos.key());
                     if(pTradeProcessor->IsTracking(pOrder))
                     {
-                        OrderOperation oOperation = pTradeProcessor->ProcesCancelled(pOrder);
+                        OrderOperation oOperation = pTradeProcessor->ProcessCancelled(pOrder);
                         switch (oOperation.eOperation) {
                         case ootSubmit:
                             oTradeData.pOrderProcessor->Submit(oOperation.pOrder,this);
@@ -347,7 +349,7 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tQueued:
             {
-                TrackerOrderEvent *pOrderEvent = dynamic_cast<TrackerOrderEvent*>(pEvent);
+                TrackerOrderEvent *pOrderEvent = static_cast<TrackerOrderEvent*>(pEvent);
                 Order const* pOrder = pOrderEvent->GetOrder();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
                 {
@@ -372,7 +374,7 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tError:
             {
-                TrackerErrorEvent *pOrderEvent = dynamic_cast<TrackerErrorEvent*>(pEvent);
+                TrackerErrorEvent *pOrderEvent = static_cast<TrackerErrorEvent*>(pEvent);
                 Order const* pOrder = pOrderEvent->GetOrder();
                 OrderError eError = pOrderEvent->GetError();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
@@ -398,25 +400,29 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tMarketData:
             {
-                TrackerMarketDataEvent *pMarketDataEvent = dynamic_cast<TrackerMarketDataEvent*>(pEvent);
-                Instrument *pInstrument = pMarketDataEvent->GetInstrument();
-                MarketData *pMarektData = pMarketDataEvent->GetMarketData();
+                TrackerMarketDataEvent *pMarketDataEvent = static_cast<TrackerMarketDataEvent*>(pEvent);
+                Instrument const*pInstrument = pMarketDataEvent->GetInstrument();
+                MarketData const*pMarektData = pMarketDataEvent->GetMarketData();
                 for(auto iPos = m_hTradeProcessors.begin() ; iPos != m_hTradeProcessors.end() ; iPos++)
                 {
                     AccountTrackerTradeProcessor *pTradeProcessor = iPos.value();
                     AccountTrackerTradeData oTradeData = m_hTradeDatas.value(iPos.key());
-                    if(pTradeProcessor->IsTracking(pOrder))
+                    if(pTradeProcessor->IsTracking(pInstrument))
                     {
-                        OrderOperation oOperation = pTradeProcessor->ProcessMarketData(pInstrument,pMarektData);
-                        switch (oOperation.eOperation) {
-                        case ootSubmit:
-                            oTradeData.pOrderProcessor->Submit(oOperation.pOrder,this);
-                            break;
-                        case ootCancel:
-                            oTradeData.pOrderProcessor->Cancel(oOperation.pOrder);
-                            break;
-                        default:
-                            break;
+                        QList<OrderOperation> oOperations = pTradeProcessor->ProcessMarketData(pInstrument,pMarektData);
+                        for(int nCount = 0 ; nCount < oOperations.size() ; nCount++)
+                        {
+                            OrderOperation oOperation = oOperations[nCount];
+                            switch (oOperation.eOperation) {
+                            case ootSubmit:
+                                oTradeData.pOrderProcessor->Submit(oOperation.pOrder,this);
+                                break;
+                            case ootCancel:
+                                oTradeData.pOrderProcessor->Cancel(oOperation.pOrder);
+                                break;
+                            default:
+                                break;
+                            }
                         }
                     }
                 }
@@ -425,9 +431,9 @@ void AccountTrackerEventProcessor::run()
 
             case tStartTrack:
             {
-                TrackerOperationEvent *pOperationEvent = dynamic_cast<TrackerOperationEvent*>(pEvent);
+                TrackerOperationEvent *pOperationEvent = static_cast<TrackerOperationEvent*>(pEvent);
                 AccountTrackerTradeData oTradeData;
-                AccountTrackerSetting *pTrackerSetting = pOperationEvent->GetTrackerSetting();
+                AccountTrackerSetting const*pTrackerSetting = pOperationEvent->GetTrackerSetting();
                 Account *pTradeAccount = pTrackerSetting->GetTradeAccount();
                 Account *pTrackAccount = pTrackerSetting->GetTrackAccount();
                 oTradeData.pMarketDataSubscriber = AccountResourceManager::GetInstance()->GetMarketDataSubscriber(pTradeAccount);
@@ -451,8 +457,8 @@ void AccountTrackerEventProcessor::run()
                 break;
             case tStopTrack:
             {
-                TrackerOperationEvent *pOperationEvent = dynamic_cast<TrackerOperationEvent*>(pEvent);
-                AccountTrackerSetting *pTrackerSetting = pOperationEvent->GetTrackerSetting();
+                TrackerOperationEvent *pOperationEvent = static_cast<TrackerOperationEvent*>(pEvent);
+                AccountTrackerSetting const*pTrackerSetting = pOperationEvent->GetTrackerSetting();
                 AccountTrackerTradeData oTradeData = m_hTradeDatas[pTrackerSetting];
                 AccountTrackerTradeProcessor *pTradeProcessor = m_hTradeProcessors[pTrackerSetting];
                 m_hTradeProcessors.remove(pTrackerSetting);
@@ -467,9 +473,3 @@ void AccountTrackerEventProcessor::run()
     }
 }
 
-
-void AccountTrackerEventProcessor::Stop()
-{
-    m_bStop = true;
-    m_cWaitCondition.wakeOne();
-}

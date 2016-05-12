@@ -84,7 +84,7 @@ public:
      * @param pAccount
      * @return
      */
-    virtual shared_ptr<OrderSubscriber> CreateMarketDataSubscriber(Account const*pAccount) = 0;
+    virtual shared_ptr<MarketDataSubscriber> CreateMarketDataSubscriber(Account const*pAccount) = 0;
 
 public:
 
@@ -111,7 +111,7 @@ public:
      * @param bCreateIfNotExist
      * @return
      */
-    shared_ptr<OrderSubscriber> GetMarketDataSubscriber(Account const*pAccount,bool bCreateIfNotExist = true);
+    shared_ptr<MarketDataSubscriber> GetMarketDataSubscriber(Account const*pAccount,bool bCreateIfNotExist = true);
 
     /**
      * @brief 返回的错误信息

@@ -57,7 +57,7 @@ public:
                 sqlQuery.first();
                 while(sqlQuery.next())
                 {
-                    QString strId = sqlQuery.value("ID");
+                    QString strId = sqlQuery.value("ID").toString();
                     QString strInstrument = sqlQuery.value("INSTRUMENT_NAME").toString();
                     QDate oTradeDay = sqlQuery.value("TRADE_DAY").toDate();
                     QTime oTradeTime = sqlQuery.value("TRADE_TIME").toTime();
@@ -68,9 +68,9 @@ public:
                     size_t nQuantity = sqlQuery.value("QUANTITY").toUInt();
                     double dQuote = sqlQuery.value("QUOTE").toDouble();
                     OrderStatus eStatus = (OrderStatus)(sqlQuery.value("STATUS").toInt());
-                    size_t nTradeVolume = sqlQuery.value("TRADE_VOLUME");
+                    size_t nTradeVolume = sqlQuery.value("TRADE_VOLUME").toUInt();
                     Instrument *pInstrument = pOrderCondition->pAccount->GetInstrument(strInstrument);
-                    Order *pOrder = new Order(strId,pAccount,pInstrument,pOrderCondition->pAccount->GetPositionCost(pInstrument),
+                    Order *pOrder = new Order(strId,pOrderCondition->pAccount,pInstrument,pOrderCondition->pAccount->GetPositionCost(pInstrument),
                                               oTradeDay,oTradeTime,eOperation,eDirection,eHedgeFlag,ePriceMode,nQuantity,
                                               dQuote,eStatus,nTradeVolume);
                     lOrders.append(pOrder);
@@ -112,7 +112,7 @@ public:
 
     void Save(Order const* pOrder)
     {
-        QString strQuery= "INSERT INTO ORDER VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
+        QString strQuery= "INSERT INTO ORDER VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery oQuery(dbConn);
         if(oQuery.prepare(strQuery))
@@ -120,16 +120,17 @@ public:
             dbConn.transaction();
             oQuery.bindValue(0,pOrder->GetId());
             oQuery.bindValue(1,pOrder->GetInstrument()->GetName());
-            oQuery.bindValue(2,pOrder->GetAccount()->GetId());
-            oQuery.bindValue(3,pOrder->GetTimestamp());
-            oQuery.bindValue(4,(int)(pOrder->GetOperation()));
-            oQuery.bindValue(5,(int)(pOrder->GetDirection()));
-            oQuery.bindValue(6,(int)(pOrder->GetHedgeFlag()));
-            oQuery.bindValue(7,(int)(pOrder->GetPriceMode()));
-            oQuery.bindValue(8,(int)(pOrder->GetQuantity()));
-            oQuery.bindValue(9,pOrder->GetQuote());
-            oQuery.bindValue(10,(int)(pOrder->GetStatus()));
-            oQuery.bindValue(11,(int)(pOrder->GetTradeVolume()));
+            oQuery.bindValue(2,pOrder->GetAccount()->GetID());
+            oQuery.bindValue(3,pOrder->GetTradeDay());
+            oQuery.bindValue(4,pOrder->GetTradeTime());
+            oQuery.bindValue(5,(int)(pOrder->GetOperation()));
+            oQuery.bindValue(6,(int)(pOrder->GetDirection()));
+            oQuery.bindValue(7,(int)(pOrder->GetHedgeFlag()));
+            oQuery.bindValue(8,(int)(pOrder->GetPriceMode()));
+            oQuery.bindValue(9,(int)(pOrder->GetQuantity()));
+            oQuery.bindValue(10,pOrder->GetQuote());
+            oQuery.bindValue(11,(int)(pOrder->GetStatus()));
+            oQuery.bindValue(12,(int)(pOrder->GetTradeVolume()));
             oQuery.exec();
             dbConn.commit();
         }

@@ -25,7 +25,7 @@ enum OrderOperationType
 
 struct OrderOperation
 {
-    Order *pOrder;
+    Order const*pOrder;
     OrderOperationType eOperation;
     OrderOperation()
     {
@@ -55,7 +55,7 @@ public:
      * @brief AccountTrackerTradeProcessor
      * @param pAccountTrackerSetting
      */
-    AccountTrackerTradeProcessor(AccountTrackerSetting *pAccountTrackerSetting);
+    AccountTrackerTradeProcessor(AccountTrackerSetting const *pAccountTrackerSetting);
 
     /**
      *
@@ -86,7 +86,7 @@ public:
      * @param pMarketData
      * @return
      */
-     OrderOperation  ProcessMarketData(Instrument *pInstrumet,MarketData const* pMarketData);
+     QList<OrderOperation> ProcessMarketData(Instrument const*pInstrumet,MarketData const* pMarketData);
 
 
     /**
@@ -110,7 +110,7 @@ public:
      * @param pPosition
      * @return
      */
-     OrderOperation  ProcessOpen(Order const* pOrder, Position *pPosition);
+     OrderOperation  ProcessOpen(Order const* pOrder, Position const *pPosition);
 
     /**
      * @brief ProcessAccountOrderTrade
@@ -118,7 +118,7 @@ public:
      * @param pTransaction
      * @return
      */
-     OrderOperation ProcessClose(Order const* pOrder, Transaction *pTransaction);
+     OrderOperation ProcessClose(Order const* pOrder, Transaction const* pTransaction);
 
     /**
      * @brief ProcessCancelling
@@ -144,13 +144,13 @@ public:
 private:
 
     void Init();
-    size_t GetAvailableOpenQuantity() const;
+    size_t GetAvailableOpenQuantity(Order const* pOrder) const;
     size_t GetAvailableCloseQuantity() const;
 
-    AccountTrackerSetting *m_pAccountTrackerSetting;
+    AccountTrackerSetting const*m_pAccountTrackerSetting;
     bool m_bStopOrder;
-    QList<Order*> m_lOrders;
-    QMap<Order*,Order*> m_hTrackToTrade;
+    QList<Order const*> m_lOrders;
+    QMap<Order const*,Order const*> m_hTrackToTrade;
     QList<AccountTrackerPosition*> m_lPositions;
     QMap<AccountTrackerPosition*,Order*> m_hCloseOrders;
     QMap<AccountTrackerPosition*,Order*> m_hStopWinInfo;

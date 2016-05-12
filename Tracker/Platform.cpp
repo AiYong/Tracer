@@ -46,7 +46,7 @@ shared_ptr<OrderProcessor> Platform::GetOrderProcessor(Account const*pAccount,bo
    if(pResult == nullptr && bCreateIfNotExist)
    {
        pResult = CreateOrderProcessor(pAccount);
-       m_mOrderProcessor.insert(pAccount->GetId(),pResult);
+       m_mOrderProcessor.insert(pAccount->GetID(),pResult);
    }
    return pResult;
 }
@@ -54,29 +54,29 @@ shared_ptr<OrderProcessor> Platform::GetOrderProcessor(Account const*pAccount,bo
 shared_ptr<OrderSubscriber> Platform::GetOrderSubscriber(Account const*pAccount,bool bCreateIfNotExist)
 {
     shared_ptr<OrderSubscriber> pResult;
-    if(m_mOrderSubscriber.contains(pAccount->GetId()))
+    if(m_mOrderSubscriber.contains(pAccount->GetID()))
     {
-        pResult = m_mOrderSubscriber[pAccount->GetId()];
+        pResult = m_mOrderSubscriber[pAccount->GetID()];
     }
     if(pResult == nullptr && bCreateIfNotExist)
     {
         pResult = CreateOrderSubsriber(pAccount);
-        m_mOrderSubscriber.insert(pAccount->GetId(),pResult);
+        m_mOrderSubscriber.insert(pAccount->GetID(),pResult);
     }
     return pResult;
 }
 
-MarketDataSubscriber* Platform::GetMarketDataSubscriber(Account const*pAccount,bool bCreateIfNotExist)
+shared_ptr<MarketDataSubscriber> Platform::GetMarketDataSubscriber(Account const*pAccount,bool bCreateIfNotExist)
 {
-    MarketDataSubscriber *pResult = nullptr;
-    if(m_mMarketDataSubscriber.contains(pAccount->GetName()))
+    shared_ptr<MarketDataSubscriber> pResult;
+    if(m_mMarketDataSubscriber.contains(pAccount->GetID()))
     {
-        pResult = m_mMarketDataSubscriber[pAccount->GetName()];
+        pResult = m_mMarketDataSubscriber[pAccount->GetID()];
     }
     if(pResult == nullptr && bCreateIfNotExist)
     {
         pResult = CreateMarketDataSubscriber(pAccount);
-        m_mMarketDataSubscriber.insert(pAccount,pResult);
+        m_mMarketDataSubscriber.insert(pAccount->GetID(),pResult);
     }
     return pResult;
 }

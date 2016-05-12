@@ -46,7 +46,7 @@ class OrderSubscriber
 {
 public:
 
-    OrderSubscriber(Account *pAccount);
+    OrderSubscriber(Account const*pAccount);
 
     virtual ~OrderSubscriber();
 

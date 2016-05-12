@@ -3,7 +3,7 @@
 #include "PositionCost.h"
 
 Order::Order(
-      int nId,
+      QString const& strId,
       Account *pAccount,
       Instrument *pInstrument,
       PositionCost *pPositionCost,
@@ -18,7 +18,7 @@ Order::Order(
       OrderStatus eStatus,
       size_t nTradeVolume
       )
-    :m_nId(nId),
+    :m_strId(strId),
      m_pAccount(pAccount),
      m_pInstrument(pInstrument),
      m_pPositionCost(pPositionCost),
@@ -35,9 +35,9 @@ Order::Order(
 {
 }
 
-int Order::GetId() const
+QString const& Order::GetId() const
 {
-    return m_nId;
+    return m_strId;
 }
 
 Account* Order::GetAccount() const

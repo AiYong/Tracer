@@ -55,7 +55,7 @@ size_t AccountTradeInfo::GetAvailableQuantity(Direction eDirection,HedgeFlag eHe
 
 size_t AccountTradeInfo::GetPositionQuantity(Direction eDirection,HedgeFlag eHedgeFlag) const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     size_t nQuantity = 0;
     for(auto iPos = m_lPositions.begin() ; iPos != m_lPositions.end() ; iPos++)
     {
@@ -71,41 +71,42 @@ size_t AccountTradeInfo::GetPositionQuantity(Direction eDirection,HedgeFlag eHed
 Order* AccountTradeInfo::CreateOrder(Direction eDirection,Operation eOperation,
                    HedgeFlag eHedgeFlag,PriceMode ePriceMode,size_t nQuantity,double dQuote)
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     Order *pOrder = nullptr;
+    QDateTime oTradeTime = QDateTime::currentDateTime();
     if(eOperation == opOpen)
     {
-        pOrder = new Order(m_pAccount->GenUniqueId(),m_pAccount,m_pInstrument,m_pPositionCost,QDateTime::currentDateTime(),eOperation,
+        pOrder = new Order(m_pAccount->GenOrderID(),m_pAccount,m_pInstrument,m_pPositionCost,oTradeTime.date(),oTradeTime.time(),eOperation,
                            eDirection,eHedgeFlag,ePriceMode,nQuantity,dQuote,osNew);
     }
     else
     {
-        pOrder = new Order(m_pAccount->GenUniqueId(),m_pAccount,m_pInstrument,m_pPositionCost,QDateTime::currentDateTime(),eOperation,
+        pOrder = new Order(m_pAccount->GenOrderID(),m_pAccount,m_pInstrument,m_pPositionCost,oTradeTime.date(),oTradeTime.time(),eOperation,
                                        eDirection,eHedgeFlag,ePriceMode,nQuantity,dQuote,osNew);
     }
     SaveOrder(pOrder);
     m_lRunningOrders.push_back(pOrder);
     m_lTradeDayOrders.push_back(pOrder);
+    return pOrder;
 }
 
-Position* AccountTradeInfo::CreatePosition(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+Position* AccountTradeInfo::CreatePosition(Order const*pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     OrderOperator oOperator;
     Position *pPosition = oOperator.Open(pOrder,oTimestamp,nQuantity,dPrice);
-    UpdateOrder(pOrder);
+    UpdateOrder(const_cast<Order*>(pOrder));
     SavePosition(pPosition);
     m_lPositions.push_back(pPosition);
     return pPosition;
 }
 
-QList<Transaction*> AccountTradeInfo::CreateTransaction(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+QList<Transaction*> AccountTradeInfo::CreateTransaction(Order const*pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     OrderOperator oOperator;
     QList<Transaction*> lTransactions;
-    QList<Position*> lPositions;
-    auto iPos = m_lPositions; 
+    auto iPos = m_lPositions.begin();
     while(iPos != m_lPositions.begin())
     {
         Position *pPosition = *iPos;
@@ -114,7 +115,7 @@ QList<Transaction*> AccountTradeInfo::CreateTransaction(Order *pOrder,QDateTime 
         if(pPosition->GetQuantity() == 0)
         {
             iPos = m_lPositions.erase(iPos);
-            lPositions.append(pPosition);
+            RemovePosition(pPosition);
         }
         else
         {
@@ -122,23 +123,23 @@ QList<Transaction*> AccountTradeInfo::CreateTransaction(Order *pOrder,QDateTime 
         }
     }
     m_lTradeDayTransactions.append(lTransactions);
-    UpdateOrder(pOrder);
+    UpdateOrder(const_cast<Order*>(pOrder));
     SaveTransaction(lTransactions);
-    RemovePosition(lPositions);
+    return lTransactions;
 }
 
-void AccountTradeInfo::UpdateOrderStatus(Order *pOrder,OrderStatus eStatus)
+void AccountTradeInfo::UpdateOrderStatus(Order const*pOrder,OrderStatus eStatus)
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     OrderOperator oOperator;
-    oOperator.UpdateOrderStatus(pOrder,eStatus);
-    UpdateOrder(pOrder);
+    oOperator.UpdateOrderStatus(const_cast<Order*>(pOrder),eStatus);
+    UpdateOrder(const_cast<Order*>(pOrder));
     switch (eStatus) {
     case osCancelled:
     case osCancelledAndPartedTraded:
     case osError:
     {
-        m_lRunningOrders.removeOne(pOrder);
+        m_lRunningOrders.removeOne(const_cast<Order*>(pOrder));
     }
         break;
     default:
@@ -149,7 +150,7 @@ void AccountTradeInfo::UpdateOrderStatus(Order *pOrder,OrderStatus eStatus)
 
 double AccountTradeInfo::GetPositionProfit() const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     double dProfit = 0;
     for(auto iPos = m_lPositions.begin() ; iPos != m_lPositions.end() ; iPos++)
     {
@@ -161,7 +162,7 @@ double AccountTradeInfo::GetPositionProfit() const
 
 double AccountTradeInfo::GetTradeDayProfit() const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     double dProfit = 0;
     for(auto iPos = m_lPositions.begin() ; iPos != m_lPositions.end() ; iPos++)
     {
@@ -174,7 +175,7 @@ double AccountTradeInfo::GetTradeDayProfit() const
 
 double AccountTradeInfo::GetTradeDayCommission() const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     double dCommission = 0;
     for(auto iPos = m_lPositions.begin() ; iPos != m_lPositions.end() ; iPos++)
     {
@@ -197,7 +198,7 @@ double AccountTradeInfo::GetTradeDayCommission() const
 double AccountTradeInfo::GetFrezonMargin() const
 {
     double dFrezonMargin = 0;
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     for(auto iPos = m_lRunningOrders.begin() ; iPos != m_lRunningOrders.end() ; iPos++)
     {
         Order *pOrder = *iPos;
@@ -212,9 +213,9 @@ double AccountTradeInfo::GetFrezonMargin() const
 }
 
 
-QList<Order*> AccountTradeInfo::GetOrders() const
+QList<Order*> AccountTradeInfo::GetOrders()
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     QList<Order*> lOrders ;
     lOrders.append(m_lTradeDayOrders);
     if(!m_bOrderLoaded)
@@ -227,10 +228,10 @@ QList<Order*> AccountTradeInfo::GetOrders() const
 }
 
 
-QList<Order*> AccountTradeInfo::GetOrders(QDate const& oTradeDay) const
+QList<Order*> AccountTradeInfo::GetOrders(QDate const& oTradeDay)
 {
 
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     if(oTradeDay == m_pInstrument->GetTradeDay())
     {
         return m_lTradeDayOrders;
@@ -244,7 +245,7 @@ QList<Order*> AccountTradeInfo::GetOrders(QDate const& oTradeDay) const
     for(int nCount = 0 ; nCount < m_lOrders.size() ; nCount)
     {
         Order *pOrder = m_lOrders[nCount];
-        if(pOrder->GetTimestamp().date() == oTradeDay)
+        if(pOrder->GetTradeDay() == oTradeDay)
         {
             lOrders.append(pOrder);
         }
@@ -255,7 +256,7 @@ QList<Order*> AccountTradeInfo::GetOrders(QDate const& oTradeDay) const
 
 QList<Order*> AccountTradeInfo::GetTradeDayOrders() const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     QList<Order*> lOrders;
     lOrders.append(m_lTradeDayOrders);
     return lOrders;
@@ -264,7 +265,7 @@ QList<Order*> AccountTradeInfo::GetTradeDayOrders() const
 
 QList<Order*> AccountTradeInfo::GetRunningOrders() const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     QList<Order*> lOrders;
     lOrders.append(m_lRunningOrders);
     return lOrders;
@@ -273,15 +274,15 @@ QList<Order*> AccountTradeInfo::GetRunningOrders() const
 
 QList<Position*> AccountTradeInfo::GetPositions() const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     QList<Position*> lPositions;
     lPositions.append(m_lPositions);
     return lPositions;
 }
 
-QList<Transaction*> AccountTradeInfo::GetTransactions() const
+QList<Transaction*> AccountTradeInfo::GetTransactions()
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     QList<Transaction*> lTransactions;
     lTransactions.append(m_lTradeDayTransactions);
     if(!m_bTransactionLoaded)
@@ -295,15 +296,15 @@ QList<Transaction*> AccountTradeInfo::GetTransactions() const
 
 QList<Transaction*> AccountTradeInfo::GetTradeDayTransactions() const
 {
-    QMutexLocker oLocker(m_mLock);
+    QMutexLocker oLocker(&m_mLock);
     QList<Transaction*> lTransactions;
     lTransactions.append(m_lTradeDayTransactions);
     return lTransactions;
 }
 
-QList<Transaction*> AccountTradeInfo::GetTransactions(QDate const& oTradeDay) const
+QList<Transaction*> AccountTradeInfo::GetTransactions(QDate const& oTradeDay)
 {
-   QMutexLocker oLocker(m_mLock);
+   QMutexLocker oLocker(&m_mLock);
    QList<Transaction*> lTransactions;
    if(m_pInstrument->GetTradeDay() == oTradeDay)
    {

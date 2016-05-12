@@ -8,7 +8,7 @@
 #include "ObjectPersistManager.h"
 
 
-AccountTrackerTradeProcessor::AccountTrackerTradeProcessor(AccountTrackerSetting *pAccountTrackerSetting)
+AccountTrackerTradeProcessor::AccountTrackerTradeProcessor(AccountTrackerSetting const*pAccountTrackerSetting)
     :m_pAccountTrackerSetting(pAccountTrackerSetting)
 {
 
@@ -42,7 +42,7 @@ bool AccountTrackerTradeProcessor::IsTracking(Order const* pOrder)
     return false;
 }
 
-QList<OrderOperation> AccountTrackerTradeProcessor::ProcessMarketData(Instrument *pInstrumet,MarketData const* pMarketData)
+QList<OrderOperation> AccountTrackerTradeProcessor::ProcessMarketData(Instrument const*pInstrumet,MarketData const* pMarketData)
 {
     QList<OrderOperation> oResult;
 
@@ -90,7 +90,7 @@ QList<OrderOperation> AccountTrackerTradeProcessor::ProcessMarketData(Instrument
                 {
                    Direction eDirection = pPosition->GetDirection();
                    HedgeFlag eHedgeFlag = pPosition->GetHedgeFlag();
-                   Instrument *pInstrument = pPosition->GetInstrument();
+                   Instrument const*pInstrument = pPosition->GetInstrument();
                    size_t nQuantity = pPosition->GetQuantity();
                    PriceMode ePriceMode = pmMarketPrice;
                    double dQuote = 0;
@@ -166,7 +166,7 @@ QList<OrderOperation> AccountTrackerTradeProcessor::ProcessMarketData(Instrument
                 {
                     Direction eDirection = pPosition->GetDirection();
                     HedgeFlag eHedgeFlag = pPosition->GetHedgeFlag();
-                    Instrument *pInstrument = pPosition->GetInstrument();
+                    Instrument const*pInstrument = pPosition->GetInstrument();
                     size_t nQuantity = pPosition->GetQuantity();
                     PriceMode ePriceMode = pmMarketPrice;
                     double dQuote = 0;
@@ -196,6 +196,7 @@ QList<OrderOperation> AccountTrackerTradeProcessor::ProcessMarketData(Instrument
             continue;
         }
     }
+    return oResult;
 }
 
 
@@ -208,7 +209,7 @@ OrderOperation AccountTrackerTradeProcessor::ProcessSubmit(Order const* pOrder)
     {
         if(pOrder->GetOperation() == opOpen)
         {
-            size_t nAvailableOpenQuantity = GetAvailableOpenQuantity();
+            size_t nAvailableOpenQuantity = GetAvailableOpenQuantity(pOrder);
             if(nAvailableOpenQuantity > 0)
             {
                 size_t nQuantity = pOrder->GetQuantity() > nAvailableOpenQuantity ? nAvailableOpenQuantity : pOrder->GetQuantity();
@@ -279,7 +280,7 @@ OrderOperation AccountTrackerTradeProcessor::ProcessQueued(Order const* pOrder)
     {
         if(pOrder->GetOperation() == opOpen)
         {
-            size_t nAvailableOpenQuantity = GetAvailableOpenQuantity();
+            size_t nAvailableOpenQuantity = GetAvailableOpenQuantity(pOrder);
             if(nAvailableOpenQuantity > 0)
             {
                 size_t nQuantity = pOrder->GetQuantity() > nAvailableOpenQuantity ? nAvailableOpenQuantity : pOrder->GetQuantity();
@@ -341,14 +342,14 @@ OrderOperation AccountTrackerTradeProcessor::ProcessQueued(Order const* pOrder)
     return oResult;
 }
 
-OrderOperation AccountTrackerTradeProcessor::ProcessOpen(Order const* pOrder, Position *pPosition)
+OrderOperation AccountTrackerTradeProcessor::ProcessOpen(Order const* pOrder, Position const*pPosition)
 {
     OrderOperation oResult;
     //监听账号报单插入事件
     if(pOrder->GetAccount()->GetID() == m_pAccountTrackerSetting->GetTrackAccount()->GetID() &&
        m_pAccountTrackerSetting->GetOrderSubmitMode() == osmTraded )
     {
-        size_t nAvailableOpenQuantity = GetAvailableOpenQuantity();
+        size_t nAvailableOpenQuantity = GetAvailableOpenQuantity(pOrder);
         if(nAvailableOpenQuantity > 0)
         {
             size_t nQuantity = pOrder->GetQuantity() > nAvailableOpenQuantity ? nAvailableOpenQuantity : pOrder->GetQuantity();
@@ -387,8 +388,9 @@ OrderOperation AccountTrackerTradeProcessor::ProcessOpen(Order const* pOrder, Po
     return oResult;
 }
 
-OrderOperation AccountTrackerTradeProcessor::ProcessClose(Order const* pOrder, Transaction *pTransaction)
+OrderOperation AccountTrackerTradeProcessor::ProcessClose(Order const* pOrder, Transaction const*pTransaction)
 {
+    OrderOperation oResult;
     //监听账号报单插入事件
     if(pOrder->GetAccount()->GetID() == m_pAccountTrackerSetting->GetTrackAccount()->GetID() &&
        m_pAccountTrackerSetting->GetOrderSubmitMode() == osmTraded )
@@ -448,6 +450,7 @@ OrderOperation AccountTrackerTradeProcessor::ProcessClose(Order const* pOrder, T
             }
         }
     }
+    return oResult;
 }
 
 OrderOperation AccountTrackerTradeProcessor::ProcessCancelling(Order const* pOrder)
@@ -455,7 +458,7 @@ OrderOperation AccountTrackerTradeProcessor::ProcessCancelling(Order const* pOrd
     OrderOperation oResult;
     if(pOrder->GetAccount()->GetID() == m_pAccountTrackerSetting->GetTrackAccount()->GetID())
     {
-        Order *pTradeAccountOrder = m_hTrackToTrade[pOrder];
+        Order const*pTradeAccountOrder = m_hTrackToTrade[pOrder];
         if(pTradeAccountOrder && (pTradeAccountOrder->GetStatus() != osCancelling || pTradeAccountOrder->GetStatus() != osCancelled ))
         {
             oResult.eOperation= ootCancel;
@@ -470,7 +473,7 @@ OrderOperation AccountTrackerTradeProcessor::ProcessCancelled(Order const* pOrde
     OrderOperation oResult;
     if(pOrder->GetAccount()->GetID() == m_pAccountTrackerSetting->GetTradeAccount()->GetID())
     {
-        Order *pTrackAccountOrder =  m_hTrackToTrade.key(pOrder);
+        Order const*pTrackAccountOrder =  m_hTrackToTrade.key(pOrder);
         if(pTrackAccountOrder)
         {
             m_hTrackToTrade.remove(pTrackAccountOrder);
@@ -483,15 +486,15 @@ OrderOperation AccountTrackerTradeProcessor::ProcessCancelled(Order const* pOrde
 
 OrderOperation AccountTrackerTradeProcessor::ProcessError(Order const* pOrder,OrderError eError)
 {
-
+    return OrderOperation();
 }
 
 void AccountTrackerTradeProcessor::Init()
 {
-    ObjectPersistManager::Load(m_pAccountTrackerSetting,m_lPositions);
+    ObjectPersistManager::GetInstance()->Load(m_pAccountTrackerSetting,m_lPositions);
 }
 
-size_t AccountTrackerTradeProcessor::GetAvailableOpenQuantity(Order *pOrder) const
+size_t AccountTrackerTradeProcessor::GetAvailableOpenQuantity(Order const* pOrder) const
 {
     size_t nAvailableQuantity = 0;
     size_t nCurrentQuantity = 0;
@@ -503,10 +506,10 @@ size_t AccountTrackerTradeProcessor::GetAvailableOpenQuantity(Order *pOrder) con
 
     for( int nCount = 0 ; nCount < m_lOrders.size() ; nCount++ )
     {
-        Order *pOrder = m_lOrders[nCount];
-        if(pOrder->GetOperation() == opOpen)
+        Order const*pCurOrder = m_lOrders[nCount];
+        if(pCurOrder->GetOperation() == opOpen)
         {
-            nCurrentQuantity += pOrder->GetQuantity();
+            nCurrentQuantity += pCurOrder->GetQuantity();
         }
     }
 
@@ -518,7 +521,8 @@ size_t AccountTrackerTradeProcessor::GetAvailableOpenQuantity(Order *pOrder) con
         if(m_pAccountTrackerSetting->GetOpenPriceMode() == opmMarketPrice)
         {
             nAvailableQuantity = m_pAccountTrackerSetting->GetTradeAccount()->GetAvailableQuantityWithMargin(m_pAccountTrackerSetting->GetInstrument(),
-                                                                              pOrder->GetDirection(),pOrder->GetHedgeFlag(),dAvailableMargin);
+                                                                              pOrder->GetDirection(),pOrder->GetHedgeFlag(),
+                                                                              dAvailableMargin);
         }
         else
         {
@@ -528,7 +532,8 @@ size_t AccountTrackerTradeProcessor::GetAvailableOpenQuantity(Order *pOrder) con
                 dQuote += m_pAccountTrackerSetting->GetCloseLimitPriceDelta();
             }
             nAvailableQuantity = m_pAccountTrackerSetting->GetTradeAccount()->GetAvailableQuantityWithMargin(m_pAccountTrackerSetting->GetInstrument(),
-                                                                              pOrder->GetDirection(),pOrder->GetHedgeFlag(),dAvailableMargin,dQuote);
+                                                                              pOrder->GetDirection(),pOrder->GetHedgeFlag(),
+                                                                              dAvailableMargin,dQuote);
         }
         if(nAvailableQuantity > nCurrentQuantity)
         {
@@ -551,7 +556,8 @@ size_t AccountTrackerTradeProcessor::GetAvailableOpenQuantity(Order *pOrder) con
                 dQuote += m_pAccountTrackerSetting->GetCloseLimitPriceDelta();
             }
             nAvailableQuantity = m_pAccountTrackerSetting->GetTradeAccount()->GetAvailableQuantity(m_pAccountTrackerSetting->GetInstrument(),
-                                                                              pOrder->GetDirection(),pOrder->GetHedgeFlag(),dQuote);
+                                                                              pOrder->GetDirection(),pOrder->GetHedgeFlag(),
+                                                                              dQuote);
         }
         if(nAvailableQuantity > nCurrentQuantity)
         {
@@ -578,7 +584,7 @@ size_t AccountTrackerTradeProcessor::GetAvailableCloseQuantity() const
 
     for( int nCount = 0 ; nCount < m_lOrders.size() ; nCount++ )
     {
-        Order *pOrder = m_lOrders[nCount];
+        Order const*pOrder = m_lOrders[nCount];
         if(pOrder->GetOperation() == opClose)
         {
             nCurrentQuantity -= pOrder->GetQuantity();

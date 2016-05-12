@@ -1,7 +1,8 @@
 #include "PositionCost.h"
 
 PositionCost::PositionCost(
-          Instrument *pInstrument,
+          Account const*pAccount,
+          Instrument const*pInstrument,
           CommissionMode eCommissionMode,
           double dLongOpenCommission,
           double dShortOpenCommission,
@@ -11,7 +12,8 @@ PositionCost::PositionCost(
           double dLongMargin,
           double dShortMargin
         )
-    :m_pInstrument(pInstrument),
+    :m_pAccount(pAccount),
+     m_pInstrument(pInstrument),
      m_eCommissionMode(eCommissionMode),
      m_dLongOpenCommission(dLongOpenCommission),
      m_dShortOpenCommission(dShortOpenCommission),
@@ -23,7 +25,12 @@ PositionCost::PositionCost(
 {
 }
 
-Instrument* PositionCost::GetInstrument() const
+Account const* PositionCost::GetAccount() const
+{
+    return m_pAccount;
+}
+
+Instrument const* PositionCost::GetInstrument() const
 {
     return m_pInstrument;
 }

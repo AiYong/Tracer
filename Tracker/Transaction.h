@@ -35,8 +35,8 @@ public:
      * @param dProfit
      */
     Transaction(
-            Account *pAccount,
-                Instrument *pInstrument,
+                Account const*pAccount,
+                Instrument const*pInstrument,
                 Direction eDirection,
                 HedgeFlag eHedgeFlag,
                 size_t nQuantity,
@@ -45,7 +45,9 @@ public:
                 double dCommission,
                 double dOpenCommission,
                 double dCloseCommission,
-                double dProfit
+                double dProfit,
+                QDateTime const& oOpenTime,
+                QDateTime const& oCloseTime
                 );
 
     /**
@@ -59,13 +61,13 @@ public:
      * @brief 交易事务账号
      * @return
      */
-    Account* GetAccount();
+    Account const* GetAccount() const;
 
     /**
      * @brief 交易事务合约
      * @return
      */
-    Instrument* GetInstrument() const;
+    Instrument const* GetInstrument() const;
 
     /**
      * @brief 交易方向
@@ -135,8 +137,8 @@ public:
 
 private:
 
-    Account *m_pAccount;
-    Instrument *m_pInstrument;
+    Account const*m_pAccount;
+    Instrument const*m_pInstrument;
     Direction m_eDirection;
     HedgeFlag m_eHedgeFlag;
     size_t m_nQuantity;
@@ -146,6 +148,8 @@ private:
     double m_dOpenCommission;
     double m_dCloseCommission;
     double m_dProfit;
+    QDateTime m_oOpenTime;
+    QDateTime m_oCloseTime;
 };
 
 #endif // _TRACKER_TRANSACTION_H_

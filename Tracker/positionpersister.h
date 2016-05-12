@@ -34,7 +34,7 @@ public:
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();
         QSqlQuery oQuery(dbConn);
         oQuery.prepare(strQuery);
-        oQuery.bindValue(0,pAccount->GetId());
+        oQuery.bindValue(0,pAccount->GetID());
         if(oQuery.exec(strQuery))
         {
             while(oQuery.next())
@@ -62,7 +62,7 @@ public:
         QSqlQuery oQuery(dbConn);
         dbConn.transaction();
         oQuery.prepare(strQuery);
-        oQuery.bindValue(0,pAccount->GetId());
+        oQuery.bindValue(0,pAccount->GetID());
         oQuery.exec();
         dbConn.commit();
     }
@@ -94,7 +94,7 @@ public:
         {
             dbConn.transaction();
             oQuery.bindValue(0,pObj->GetID());
-            oQuery.bindValue(1,pObj->GetAccount()->GetId());
+            oQuery.bindValue(1,pObj->GetAccount()->GetID());
             oQuery.bindValue(2,pObj->GetInstrument()->GetID());
             oQuery.bindValue(3,pObj->GetQuantity());
             oQuery.bindValue(4,pObj->GetPrice());
@@ -131,7 +131,7 @@ public:
 
     }
 
-    void Remove(Position const* pObjs)
+    void Remove(Position const* pObj)
     {
         QString strQuery = "DELETE FROM POSITION WHERE ID = ?";
         QSqlDatabase dbConn = DatabaseManager::GetInstance()->GetDatabase();

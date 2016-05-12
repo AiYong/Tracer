@@ -5,3 +5,8 @@ AccountTrackWidget::AccountTrackWidget(QWidget *parent)
 {
 
 }
+
+AccountTrackWidget::~AccountTrackWidget()
+{
+
+}

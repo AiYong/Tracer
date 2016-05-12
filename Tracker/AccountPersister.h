@@ -47,7 +47,7 @@ public:
         if(oQuery.prepare(strQuery))
         {
             dbConn.transaction();
-            oQuery.bindValue(0,pObj->GetId());
+            oQuery.bindValue(0,pObj->GetID());
             oQuery.bindValue(1,pObj->GetName());
             oQuery.bindValue(2,pObj->GetPassword());
             oQuery.bindValue(3,pObj->GetBroker()->GetId());
@@ -71,7 +71,7 @@ public:
         oQuery.bindValue(0,pObj->GetName());
         oQuery.bindValue(1,pObj->GetPassword());
         oQuery.bindValue(2,pObj->GetBroker()->GetId());
-        oQuery.bindValue(3,pObj->GetId());
+        oQuery.bindValue(3,pObj->GetID());
         oQuery.exec();
         dbConn.commit();
     }
@@ -88,7 +88,7 @@ public:
         QSqlQuery oQuery(dbConn);
         oQuery.prepare(strQuery);
         dbConn.transaction();
-        oQuery.bindValue(0,pObjs->GetId());
+        oQuery.bindValue(0,pObjs->GetID());
         oQuery.exec();
         dbConn.commit();
     }

@@ -20,7 +20,7 @@ public:
      * @param dPrice
      * @return
      */
-    Position* Open(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    Position* Open(Order const *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
 
     /**
      * @brief Close
@@ -31,7 +31,7 @@ public:
      * @param dPrice
      * @return
      */
-    Transaction* Close(Position *pPosition,Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
+    Transaction* Close(Position const*pPosition,Order const*pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice);
     
     /**
      * @brief UpdateOrderStatus

@@ -8,11 +8,13 @@ Broker::Broker(QString const& strId,
     QString const& strName,
     QStringList const& lTradeUrl,
     QStringList const& lMarketDataUrl,
+    QString const& strPlatform
     )
     :m_strId(strId),
      m_strName(strName),
      m_lTradeUrl(lTradeUrl),
-     m_lMarketDataUrl(lMarketDataUrl)
+     m_lMarketDataUrl(lMarketDataUrl),
+     m_strPlatform(strPlatform)
 {
 }
 
@@ -96,3 +98,13 @@ void Broker::RemoveAccount(Account *pAccount)
     m_lAccounts.removeOne(pAccount);
 }
 
+
+QString const& Broker::GetPlatform() const
+{
+    return m_strPlatform;
+}
+
+void Broker::SetPlatform(QString const& strPlatform)
+{
+    m_strPlatform = strPlatform;
+}

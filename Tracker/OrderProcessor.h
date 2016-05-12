@@ -15,7 +15,7 @@ public:
      * @brief OrderProcessor
      * @param parent
      */
-    explicit OrderProcessor(Account *pAccount);
+    explicit OrderProcessor(Account const* pAccount);
 
     /**
      * @brief ~OrderProcessor

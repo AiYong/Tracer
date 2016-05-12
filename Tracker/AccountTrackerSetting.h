@@ -155,7 +155,7 @@ public://账号
      * @brief SetTradeAccount
      * @param pAccount
      */
-    void SetTradeAccount(Account *pAccount) const;
+    void SetTradeAccount(Account *pAccount);
 
     /**
      * @brief 跟踪账号
@@ -469,7 +469,7 @@ public:
      * @brief GetOrderSubmitMode
      * @param eOrderSubmitMode
      */
-    void SetOrderSubmitMode(OrderSubmitMode eOrderSubmitMode) const;
+    void SetOrderSubmitMode(OrderSubmitMode eOrderSubmitMode);
 
 
 private:
@@ -486,9 +486,9 @@ private:
     double m_dStopWinOrderLimitPriceDelta;
     bool m_bStopLoss;
     double m_dStopLossPrice;
-    StopWinPriceMode m_eStopLossPriceMode;
-    StopWinOrderType m_eStopLossOrderType;
-    StopWinOrderLimitPriceMode m_eStopLossOrderLimitPriceMode;
+    StopLossPriceMode m_eStopLossPriceMode;
+    StopLossOrderType m_eStopLossOrderType;
+    StopLossOrderLimitPriceMode m_eStopLossOrderLimitPriceMode;
     double m_dStopLossOrderLimitPriceDelta;
 
     PositionLimitMode m_ePositionLimitMode;

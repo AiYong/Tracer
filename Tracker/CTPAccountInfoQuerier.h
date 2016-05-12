@@ -21,7 +21,7 @@ class CTPAccountInfoQuerier : public CThostFtdcTraderSpi
 {
 public:
 
-    CTPAccountInfoQuerier(Account *pAccount);
+    CTPAccountInfoQuerier(Account const* pAccount);
 
     ~CTPAccountInfoQuerier();
 
@@ -41,6 +41,7 @@ public:
 
     void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
+	void OnRspQryExchangeMarginRate(CThostFtdcExchangeMarginRateField *pExchangeMarginRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 public:
 
     std::shared_ptr<AccountInfo> Query();
@@ -49,7 +50,7 @@ private:
 
     void Clear();
 
-    Account *m_pAccount;
+    Account const*m_pAccount;
     CThostFtdcTraderApi *m_pTradeApi;
     CThostFtdcTradingAccountField m_oTradingAccount;
     QList<CThostFtdcInstrumentField*> m_lInstruments;

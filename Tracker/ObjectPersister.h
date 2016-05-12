@@ -3,7 +3,6 @@
 
 #include <QtSql>
 #include <QVariantList>
-#include "ObjectContainer.h"
 
 /**
  * @brief 对象持久化器主模板

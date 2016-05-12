@@ -6,23 +6,24 @@
 #include "Transaction.h"
 #include "PositionCost.h"
 
-Position* OrderOperator::Open(Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+Position* OrderOperator::Open(Order const* pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
-    Position* pPosition = new Position(pOrder->GetAccount(),pOrder->GetInstrument(),pOrder->GetPositionCost(),oTimestamp,
+    Position* pPosition = new Position(pOrder->GetAccount()->GenPositionID(),pOrder->GetAccount(),pOrder->GetInstrument(),pOrder->GetPositionCost(),oTimestamp,
                                        pOrder->GetDirection(),pOrder->GetHedgeFlag(),nQuantity,dPrice);
-    pOrder->m_nTradeVolume += nQuantity;
-    if(pOrder->m_nQuantity == pOrder->m_nTradeVolume)
+    Order *pCurOrder = const_cast<Order*>(pOrder);
+    pCurOrder->m_nTradeVolume += nQuantity;
+    if(pCurOrder->m_nQuantity == pOrder->m_nTradeVolume)
     {
-        pOrder->m_eStatus = osCompletedTraded;
+        pCurOrder->m_eStatus = osCompletedTraded;
     }
     else
     {
-        pOrder->m_eStatus = osPartedTraded;
+        pCurOrder->m_eStatus = osPartedTraded;
     }
     return pPosition;
 }
 
-Transaction* OrderOperator::Close(Position *pPosition,Order *pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
+Transaction* OrderOperator::Close(Position const*pPosition,Order const*pOrder,QDateTime const& oTimestamp,size_t nQuantity,double dPrice)
 {
     double dOpenCommission = 0;
     double dCloseCommission = 0;
@@ -68,21 +69,22 @@ Transaction* OrderOperator::Close(Position *pPosition,Order *pOrder,QDateTime co
     Transaction *pTransaction = new Transaction(pOrder->GetAccount(),pOrder->GetInstrument(),pPosition->GetDirection(),
                                                 pOrder->GetHedgeFlag(),nQuantity,pPosition->GetPrice(),dPrice,
                                                 dOpenCommission + dCloseCommission,dOpenCommission,dCloseCommission,
-                                                dProfit
+                                                dProfit,pPosition->GetTimestamp(),oTimestamp
                                                 );
-    pOrder->m_nTradeVolume += nQuantity;
-    if(pOrder->m_nQuantity == pOrder->m_nTradeVolume)
+    Order *pCurOrder = const_cast<Order*>(pOrder);
+    pCurOrder->m_nTradeVolume += nQuantity;
+    if(pCurOrder->m_nQuantity == pOrder->m_nTradeVolume)
     {
-        pOrder->m_eStatus = osCompletedTraded;
+        pCurOrder->m_eStatus = osCompletedTraded;
     }
     else
     {
-        pOrder->m_eStatus = osPartedTraded;
+        pCurOrder->m_eStatus = osPartedTraded;
     }
     return pTransaction;
 }
 
-void OrderOperator::Cancelled(Order *pOrder)
+void OrderOperator::UpdateOrderStatus(Order *pOrder,OrderStatus eStatus)
 {
     if(pOrder->m_nTradeVolume > 0)
     {

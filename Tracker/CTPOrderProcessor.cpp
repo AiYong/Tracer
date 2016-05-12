@@ -1,7 +1,10 @@
 #include "CTPOrderProcessor.h"
 #include <cstring>
+#include <QString>
 
-CTPOrder::CTPOrder(Order *pOrder,OrderListener *pOrderListener)
+#include "Broker.h"
+
+CTPOrder::CTPOrder(Order const* pOrder,OrderListener const *pOrderListener)
     :m_pOrder(pOrder),m_pOrderListener(pOrderListener)
 {
     Init();
@@ -14,17 +17,17 @@ CTPOrder::~CTPOrder()
 void CTPOrder::Init()
 {
     strcpy(m_oInputOrder.InstrumentID,m_pOrder->GetInstrument()->GetID().toStdString().c_str());
-    QString strOrderRef = m_pOrder->GetTimestamp().toString("yyyyMMdd");
-    sprintf(m_oInputOrder.OrderRef,"%s%06ld",strOrderRef.toStdString().c_str(),m_pOrder->GetId());
+    QString strOrderID = m_pOrder->GetId();
+    strcpy(m_oInputOrder.OrderRef,strOrderID.toStdString().c_str());
     m_oInputOrder.ForceCloseReason =THOST_FTDC_FCC_NotForceClose;
     m_oInputOrder.IsAutoSuspend = false;
     m_oInputOrder.IsSwapOrder = false;
-    m_oInputOrder.LimitPrice = closeRequest->getQuote();
-    m_oInputOrder.VolumeTotalOriginal = closeRequest->getQuantity();
+    m_oInputOrder.LimitPrice = m_pOrder->GetQuote();
+    m_oInputOrder.VolumeTotalOriginal = m_pOrder->GetQuantity();
     m_oInputOrder.MinVolume = 1;
     m_oInputOrder.VolumeCondition = THOST_FTDC_VC_AV;
     m_oInputOrder.ContingentCondition = THOST_FTDC_CC_Immediately;
-    if(m_pOrder->GetOperation() = opOpen)
+    if(m_pOrder->GetOperation() == opOpen)
     {
         m_oInputOrder.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
     }
@@ -68,12 +71,12 @@ void CTPOrder::Init()
     }
 }
 
-Order* CTPOrder::GetOrder() const
+Order const* CTPOrder::GetOrder() const
 {
     return m_pOrder;
 }
 
-OrderListener* CTPOrder::GetOrderListener() const
+OrderListener const* CTPOrder::GetOrderListener() const
 {
     return m_pOrderListener;
 }
@@ -91,7 +94,7 @@ CThostFtdcInputOrderActionField const& CTPOrder::GetInputOrderAction() const
     strcpy(m_oInputOrderAction.InstrumentID,m_oOrderResponse.InstrumentID);
     strcpy(m_oInputOrderAction.ExchangeID,m_oOrderResponse.ExchangeID);
     m_oInputOrderAction.FrontID = m_oOrderResponse.FrontID;
-    m_oInputOrderAction.OrderActionRef = m_pOrder->GetId();
+    m_oInputOrderAction.OrderActionRef = m_pOrder->GetId().toInt();
     m_oInputOrderAction.LimitPrice = m_oOrderResponse.LimitPrice;
     m_oInputOrderAction.VolumeChange = m_oOrderResponse.VolumeTotal;
     m_oInputOrderAction.SessionID = m_oOrderResponse.SessionID;
@@ -104,7 +107,7 @@ void CTPOrder::SetOrderResponse(CThostFtdcOrderField const& oOrderResponse)
 }
 
 
-CTPOrderProcessor::CTPOrderProcessor(Account *pAccount)
+CTPOrderProcessor::CTPOrderProcessor(Account const*pAccount)
     :OrderProcessor(pAccount)
 {
 
@@ -120,7 +123,7 @@ bool CTPOrderProcessor::Initialize()
 {
     m_nRequestNumber = 1;
     strcpy(m_oLoginInfo.BrokerID,m_pAccount->GetBroker()->GetId().toStdString().c_str());
-    strcpy(m_oLoginInfo.UserID,m_pAccount->GetId().toStdString().c_str());
+    strcpy(m_oLoginInfo.UserID,m_pAccount->GetID().toStdString().c_str());
     strcpy(m_oLoginInfo.Password,m_pAccount->GetPassword().toStdString().c_str());
     m_pTradeApi = CThostFtdcTraderApi::CreateFtdcTraderApi();
     m_pTradeApi->SubscribePrivateTopic(THOST_TERT_QUICK);
@@ -133,14 +136,14 @@ bool CTPOrderProcessor::Initialize()
         m_pTradeApi->RegisterFront(const_cast<char*>(strUrl.toStdString().c_str()));
     }
     strcpy(m_oSettlementInfoConfirm.BrokerID,m_pAccount->GetBroker()->GetId().toStdString().c_str());
-    strcpy(m_oSettlementInfoConfirm.InvestorID,m_pAccount->GetId().toStdString().c_str());
+    strcpy(m_oSettlementInfoConfirm.InvestorID,m_pAccount->GetID().toStdString().c_str());
     m_bConnected = false;
     m_pTradeApi->Init();
     std::unique_lock<std::mutex> oLocker(m_lLock);
     auto oWaitCondition = [&]()->bool {
         return m_bConnected == true;
     };
-    if(m_cWaitCondition.wait_for(std::chrono::seconds(30),oWaitCondition))
+    if(m_cWaitCondition.wait_for(oLocker,std::chrono::seconds(30),oWaitCondition))
     {
         return true;
     }
@@ -159,19 +162,20 @@ void CTPOrderProcessor::Destroy()
     }
 }
 
-void CTPOrderProcessor::Submit(Order const* pOrder)
+void CTPOrderProcessor::Submit(Order const* pOrder,OrderListener const* pOrderListener)
 {
-    std::unique_lock oLocker(m_lLock);
+    std::unique_lock<std::mutex> oLocker(m_lLock);
     CTPOrderOperation oOperation;
     oOperation.eType = ootSubmit;
     oOperation.pOrder = pOrder;
+    oOperation.pOrderListener = pOrderListener;
     m_qOrders.push_back(oOperation);
     m_cWaitCondition.notify_one();
 }
 
 void CTPOrderProcessor::Cancel(Order const* pOrder)
 {
-    std::unique_lock oLocker(m_lLock);
+    std::unique_lock<std::mutex> oLocker(m_lLock);
     CTPOrderOperation oOperation;
     oOperation.eType = ootCancel;
     oOperation.pOrder = pOrder;
@@ -210,14 +214,12 @@ void CTPOrderProcessor::operator()()
             break;
         case ootCancel:
         {
-            QString strOrderRef = "%1%1";  ;
-            strOrderRef = strOrderRef.arg(oOperation.pOrder->GetTimestamp().toString("yyyyMMdd"))
-                                     .arg(oOperation.pOrder->GetId(),6,"0");
+            QString strOrderRef = oOperation.pOrder->GetId();  ;
             CTPOrder *pCTPOrder = m_hOrders[strOrderRef];
             if(pCTPOrder)
             {
                 CThostFtdcInputOrderActionField const& oInputOrder = pCTPOrder->GetInputOrderAction();
-                m_pTradeApi->ReqOrderAction(oInputOrder,m_nRequestNumber++);
+                m_pTradeApi->ReqOrderAction(const_cast<CThostFtdcInputOrderActionField*>(&oInputOrder),m_nRequestNumber++);
                 pCTPOrder->GetOrderListener()->OnCancelling(oOperation.pOrder);
             }
         }
@@ -315,7 +317,7 @@ void CTPOrderProcessor::OnRtnOrder(CThostFtdcOrderField *pOrder)
 void CTPOrderProcessor::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
     m_lLock.lock();
-    QString strOrderRef(pOrder->OrderRef);
+    QString strOrderRef(pTrade->OrderRef);
     CTPOrder *pCTPOrder = m_hOrders[strOrderRef];
     m_lLock.unlock();
     if(pCTPOrder)
@@ -332,8 +334,12 @@ void CTPOrderProcessor::OnRtnTrade(CThostFtdcTradeField *pTrade)
         }
         else
         {
-            Transaction *pTransaction = m_pAccount->CreateTransaction(pCTPOrder->GetOrder(),oTradeTime,nQuantity,dPrice);
-            pCTPOrder->GetOrderListener()->OnClose(pCTPOrder->GetOrder(),pTransaction);
+            QList<Transaction*> lTransactions = m_pAccount->CreateTransaction(pCTPOrder->GetOrder(),oTradeTime,nQuantity,dPrice);
+            for(int nCount = 0 ; nCount < lTransactions.size() ; nCount++)
+            {
+                Transaction *pTransaction = lTransactions[nCount];
+                pCTPOrder->GetOrderListener()->OnClose(pCTPOrder->GetOrder(),pTransaction);
+            }
         }
 
     }

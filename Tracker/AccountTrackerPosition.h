@@ -51,7 +51,7 @@ private:
     double m_dPrice;
     size_t m_nQuantity;
     QDate m_oTradeDay;
-    Instrument *m_pInstrument;
+    Instrument const*m_pInstrument;
     Direction m_eDirection;
     HedgeFlag m_eHedgeFlag;
 

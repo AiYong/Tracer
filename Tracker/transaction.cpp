@@ -1,8 +1,8 @@
 #include "Transaction.h"
 
 Transaction::Transaction(
-        Account *pAccount,
-        Instrument *pInstrument,
+        Account const*pAccount,
+        Instrument const*pInstrument,
         Direction eDirection,
         HedgeFlag eHedgeFlag,
         size_t nQuantity,
@@ -11,7 +11,9 @@ Transaction::Transaction(
         double dCommission,
         double dOpenCommission,
         double dCloseCommission,
-        double dProfit
+        double dProfit,
+        QDateTime const& oOpenTime,
+        QDateTime const& oCloseTime
         )
     :m_pAccount(pAccount),
      m_pInstrument(pInstrument),
@@ -23,7 +25,9 @@ Transaction::Transaction(
      m_dCommission(dCommission),
      m_dOpenCommission(dOpenCommission),
      m_dCloseCommission(dCloseCommission),
-     m_dProfit(dProfit)
+     m_dProfit(dProfit),
+     m_oOpenTime(oOpenTime),
+     m_oCloseTime(oCloseTime)
 {
 }
 
@@ -32,12 +36,12 @@ Transaction::~Transaction()
 {
 }
 
-Account* Transaction::GetAccount() const
+Account const* Transaction::GetAccount() const
 {
     return m_pAccount;
 }
 
-Instrument* Transaction::GetInstrument() const
+Instrument const* Transaction::GetInstrument() const
 {
     return m_pInstrument;
 }
@@ -85,4 +89,14 @@ double Transaction::GetCommission() const
 double Transaction::GetProfit() const
 {
     return m_dProfit;
+}
+
+QDateTime const& Transaction::GetOpenTime() const
+{
+    return m_oOpenTime;
+}
+
+QDateTime const& Transaction::GetCloseTime() const
+{
+    return m_oCloseTime;
 }
